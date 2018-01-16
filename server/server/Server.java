@@ -1,26 +1,67 @@
 package server;
 
-public class Server {
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.time.LocalDateTime;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-	public Server() {
+import serverView.GameServlet;
+import serverView.WaitingRoom;
+
+public class Server implements Runnable {
+
+	private final ServerSocket serverSocket;
+	//private final ExecutorService pool;
+	private int clientCounter = 0;
+	
+	// This is a method to manage different threads more efficiently (Executors)
+	
+	public Server(int port, int poolSize) throws IOException {
 		
-		System.out.println("booting... port 8585");
-		
+		serverSocket = new ServerSocket(port);
+		//pool = Executors.newFixedThreadPool(poolSize);
+		//pool.execute((new WaitingRoom(serverSocket, clientCounter)));
+		//pool.shutdown();
 	}
 	
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		try {
-			new Server();
+	// Because this is runnable service runs
+	
+	//Temporarily used
+	WaitingRoom newRoom = null;
+	public void run() {
+		while (true) {
+			try {
+				System.out.println("Host addr: " + InetAddress.getLocalHost().getHostName()); 
+				
+					System.out.println(LocalDateTime.now());
+					clientCounter = clientCounter + 1;
+					System.out.println("SERVER     : WaitingRoomThread#:");
+					System.out.println(clientCounter);
+					
+					// Blocking 
+					newRoom = new WaitingRoom(serverSocket, clientCounter);
+					
+					
+				} catch (IOException e) {
+					e.printStackTrace();
+					
+				}
 			
-		} catch (Exception e) {
+			// OK start the servlet and detach it using Threading
+				
+			Runnable r = new GameServlet(newRoom.getWaitingPlayers());
 			
-			System.out.println("Server stopped unexpected...:");
-			e.printStackTrace();
-			System.out.println("REBOOT MANUALLY...:");
+			System.out.println("flushing");
+			System.out.flush();
+			Thread t = new Thread(r);
+			System.out.println("stepped over");
 			
-		}
+			//These are non-blocking and will throw their own exceptions later on
+			t.start();
 		
+		}
 		
 	}
 	
