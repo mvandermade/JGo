@@ -3,64 +3,74 @@ package server;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.time.LocalDateTime;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import serverModel.ConnectionManager;
 import serverView.GameServlet;
 import serverView.WaitingRoom;
 
 public class Server implements Runnable {
 
 	private final ServerSocket serverSocket;
+	private Queue<Socket> connQueue = new ConcurrentLinkedQueue<Socket>();
+	private long pollQueueTime;
+	
 	//private final ExecutorService pool;
-	private int clientCounter = 0;
 	
 	// This is a method to manage different threads more efficiently (Executors)
 	
 	public Server(int port, int poolSize) throws IOException {
 		
 		serverSocket = new ServerSocket(port);
-		//pool = Executors.newFixedThreadPool(poolSize);
-		//pool.execute((new WaitingRoom(serverSocket, clientCounter)));
-		//pool.shutdown();
-	}
-	
-	// Because this is runnable service runs
-	
-	//Temporarily used
-	WaitingRoom newRoom = null;
-	public void run() {
-		while (true) {
-			try {
-				System.out.println("Host addr: " + InetAddress.getLocalHost().getHostName()); 
-				
-					System.out.println(LocalDateTime.now());
-					clientCounter = clientCounter + 1;
-					System.out.println("SERVER     : WaitingRoomThread#:");
-					System.out.println(clientCounter);
+		
+		// Anonymous function that runs forever
+		// Adds sockets to connQueue concurrently
+		( new Thread() { public void run() {
+			// do something 
+				while (true) {
 					
-					// Blocking 
-					newRoom = new WaitingRoom(serverSocket, clientCounter);
-					
-					
-				} catch (IOException e) {
-					e.printStackTrace();
+					try {
+						connQueue.add(serverSocket.accept());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					
 				}
-			
-			// OK start the servlet and detach it using Threading
-				
-			Runnable r = new GameServlet(newRoom.getWaitingPlayers());
-			
-			System.out.println("flushing");
-			System.out.flush();
-			Thread t = new Thread(r);
-			System.out.println("stepped over");
-			
-			//These are non-blocking and will throw their own exceptions later on
-			t.start();
+			} } ).start(); 
 		
+		
+		// Setting
+		pollQueueTime = 1500;
+	}
+	
+	// SERVER THREAD
+	public void run() {
+		
+		
+		
+		// While loop logic, server is allowed to sleep when idling
+		while (true) {
+			try {
+				Thread.sleep(pollQueueTime);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			System.out.println("polling...");
+			
+			// Java9 this can be improved with a nullchecker
+			Socket nextConnInLine = connQueue.poll();
+			if (nextConnInLine != null) {
+				System.out.println(nextConnInLine);
+			}
+			
 		}
 		
 	}
