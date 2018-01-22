@@ -36,8 +36,8 @@ public class Server implements Runnable {
 	private long pollQueueTime;
 	
 	// UTF16 escape chars
-	private final String DELIMITER1 = "\\$";
-	private final String DELIMITER2 = "\\_";
+	private final static String DELIMITER1 = "$";
+	private final static String DELIMITER2 = "_";
 	
 
 	
@@ -179,7 +179,9 @@ public class Server implements Runnable {
 		SETTINGS,
 		QUIT,
 		REQUESTGAME,
-		RANDOM
+		RANDOM,
+		LOBBY,
+		CHAT
 		
 	}
 	
@@ -187,57 +189,56 @@ public class Server implements Runnable {
 		// TODO Auto-generated method stub
 		// This method answers the Rx packet ToSeverPacket with an Tx ToClientPacket.
 		
-		// Creating "outbox"
-		List<ToClientPacket> outbox = new ArrayList<>();
-		
-		String clientCMD = cRx.getInputLine();
-		int clientId = cRx.getClientId();
 		// Expecting protocol 3
 		// COMMAND$PAYLOAD
 		// Check for it
+		
+		// Creating "outbox"
+		List<ToClientPacket> outbox = new ArrayList<>();
+		
+		String inputLineCMD = cRx.getInputLine();
+		int clientId = cRx.getClientId();
+		
+		// Try to strip out the message block
+		
 		try {
-			System.out.print("Client: ");
-			System.out.print(clientId);
-			String[] delimit1 = clientCMD.split(DELIMITER1);
+		
+			System.out.print("Client: "); System.out.print(clientId); System.out.print(inputLineCMD);
+			String[] inputLineSplit = inputLineCMD.split("\\"+getDELIMITER1());
+			ClientCMDs clientCMD = ClientCMDs.valueOf(inputLineSplit[0]);
 			
-			System.out.print(" delim1[0]: ");
-			System.out.print(delimit1[0]);
-			
-			System.out.print(" delim1[1]: ");
-			System.out.print(delimit1[1]);
-			
-			ClientCMDs clientCMDlist = ClientCMDs.valueOf(delimit1[0]);
-			
-			
-			String[] delimit2 = delimit1[1].split(DELIMITER2);
-			
-			switch (clientCMDlist) {
+			switch (clientCMD) {
 			case NAME:
-				playMan.addPlayer(clientId, delimit2[0]);
-				outbox.add(new ToClientPacket(clientId, "HELLO, " +playMan.GetPlayerName(clientId)));
+				
+				String[] payload = inputLineSplit[1].split("\\"+getDELIMITER2());
+				String payloadNAME = payload[0];
+				
+				//System.out.print(" delim2[1]: "); System.out.print(delimit2[1]);
+				playMan.addPlayer(clientId, payloadNAME);
+				
+				outbox.add(new ToClientPacket(clientId, "OTHER","Welcome, " +playMan.GetPlayerName(clientId) + "."));
+				outbox.add(new ToClientPacket(clientId, "CMDHINT","LOBBY, REQUESTGAME$2$RANDOM"));
 				break;
-			case MOVE:
-				break;
-			case PASS:
-				break;
-			case SETTINGS:
-				break;
-			case QUIT:
-				break;
-			case REQUESTGAME:
-				break;
-			case RANDOM:
-				break;
+				
 			default:
-				outbox.add(new ToClientPacket(clientId, "UNKNOWNCOMMAND"));
-				break;
-			}
+				
+				try {
+					
+					String ClientPlayerName = playMan.GetPlayerName(clientId);
+					clientCMDServlet(cRx, outbox, clientCMD, inputLineSplit);
+					
+				} catch(NullPointerException e) {
+					
+					outbox.add(new ToClientPacket(clientId, "CMDHINT","NAME$yourname"));
+					
+				} // Try getName
+				
+			} // switch NAME, default
 			
 		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 			
-			outbox.add(new ToClientPacket(clientId, "UNKNOWNCOMMAND"));
-			outbox.add(new ToClientPacket(clientId, "OTHER$TRY AGAIN"));
-			e.printStackTrace();
+			outbox.add(new ToClientPacket(clientId, "CMDHINT","UNKNOWN:"+inputLineCMD));
+
 		}
 		
 		List<ToClientPacket> txQueue = outbox.stream()
@@ -251,10 +252,103 @@ public class Server implements Runnable {
 			
 		});
 		
+	}
+
+	private void clientCMDServlet(ToServerPacket cRx, List<ToClientPacket> outbox, ClientCMDs clientCMD, String[] inputLineSplit) {
+		// TODO Auto-generated method stub
 		
+		int clientId = cRx.getClientId();
+		String ClientPlayerName = playMan.GetPlayerName(clientId);
 		
+		// This part can only be accessed if ClientPlayerName exisits
+		if (ClientPlayerName != null) {
+			try {
+				switch (clientCMD) {
+				case MOVE:
+					break;
+				case PASS:
+					break;
+				case SETTINGS:
+					break;
+				case QUIT:
+					break;
+				case REQUESTGAME:
+					// Example what to expect: REQUESTGAME$<int players>$<string against>
+					try {
+						int amountOfPlayers= Integer.parseInt(inputLineSplit[1]);
+						String playingAgainst= inputLineSplit[2];
+						
+						// Create empty game with the player in it.
+					} catch(IllegalArgumentException | ArrayIndexOutOfBoundsException e) {					
+						outbox.add(new ToClientPacket(clientId, "CMDHINT","REQUESTGAME$2$RANDOM"));
+					}
+					
+					// Ignore this for now...
+					
+					break;
+				case RANDOM:
+					break;
+				case LOBBY:
+					outbox.add(new ToClientPacket(clientId, "OTHER","#other players in game: "+playMan.GetListOfAllOtherPlayers(clientId).size()));
+					
+					if (playMan.GetListOfAllOtherPlayers(clientId).size() == 0) {
+						
+						outbox.add(new ToClientPacket(clientId, "CMDHINT","REQUESTGAME$2$RANDOM"));
+						
+					} else {
+						String otherPlayersReply = playMan.GetListOfAllOtherPlayers(clientId)
+					            .stream()
+					            .map(playerObj -> "P: " + playerObj.getName()+", ")
+					            .collect(Collectors.joining());
+						
+						outbox.add(new ToClientPacket(clientId, "OTHER",otherPlayersReply));
+						
+						outbox.add(new ToClientPacket(clientId, "CMDHINT","REQUESTGAME$2$RANDOM"));
+	
+						outbox.add(new ToClientPacket(clientId, "CMDHINT","REQUESTGAME$2$"+playMan.GetListOfAllOtherPlayers(clientId).get(0).getName()));
+					}
+					break;
+				case CHAT:
+					String[] payload = inputLineSplit[1].split("\\"+getDELIMITER2());
+					String payloadCHAT = payload[0];
+					String chatSender = playMan.GetPlayerName(clientId);
+					
+					if(playMan.GetListOfAllOtherPlayers(clientId).size() == 0) {
+						
+						outbox.add(new ToClientPacket(clientId, "ERROR","No players in lobby..."));
+	
+						
+					} else {
+						playMan.GetListOfAllOtherPlayers(clientId).stream().forEach(
+							op -> {
+								outbox.add(new ToClientPacket(op.getClientId(), "CHAT","FROM"+DELIMITER1+chatSender+DELIMITER1+payloadCHAT));
+							}
+						);
+						
+					}
+					
+					break;
+				default:
+					outbox.add(new ToClientPacket(clientId, "ERROR", "UNKNOWNCOMMAND"));
+					break;
+				}
+				
+			} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
+				
+					outbox.add(new ToClientPacket(clientId, "ERROR", "UNKNOWNCOMMAND"));
+					outbox.add(new ToClientPacket(clientId, "ERROR", "TRY AGAIN"));
+					e.printStackTrace();
+			}
+		} // endif ClientPlayerName
 		
-		
+	}
+
+	public static String getDELIMITER2() {
+		return DELIMITER2;
+	}
+
+	public static String getDELIMITER1() {
+		return DELIMITER1;
 	}
 
 

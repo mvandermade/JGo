@@ -32,7 +32,7 @@ public class ConnectionManager {
 		// Booting an input thread after connection is noticed.
 		clients.add(new ConnectedClientObj(clientId, skt));
 		
-		addToClientTxQueue(new ToClientPacket(clientId, "Hi, je unieke nummer is : " + clientId + "\nBegin (eenmalig) met NAME$JE TE KIEZEN NAAM"));
+		addToClientTxQueue(new ToClientPacket(clientId, "OTHER", "Hi, je unieke nummer is : " + clientId + "...Begin (eenmalig) met NAME$jeNaam..."));
 		
 		(new Thread() {
 			public void run() {

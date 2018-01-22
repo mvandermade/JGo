@@ -1,14 +1,20 @@
 package serverModel;
 
+import server.Server;
+
 public class ToClientPacket {
 	
 	private String outputLine;
+	private String serverCMD;
 	private int clientId;
 	private long startTime;
+	private String servDELIMITER1 = Server.getDELIMITER1();
+	private String servDELIMITER2 = Server.getDELIMITER2();
 
-	public ToClientPacket(int clientId, String outputLine) {
+	public ToClientPacket(int clientId, String serverCMD, String outputLine) {
 		
-		this.setOutputLine(outputLine);
+		
+		this.setOutputLine(serverCMD+servDELIMITER1+outputLine);
 		this.setClientId(clientId);
 		this.setStartTime(System.nanoTime());
 		
@@ -42,7 +48,15 @@ public class ToClientPacket {
 	}
 	
 	public String stringify() {
-		return "TO" + this.clientId +") : " + this.outputLine + " AT:" + this.startTime;
+		return "TO" + this.clientId +")" + this.serverCMD + this.servDELIMITER1 + this.outputLine + " AT:" + this.startTime;
+	}
+
+	public String getServerCMD() {
+		return serverCMD;
+	}
+
+	public void setServerCMD(String serverCMD) {
+		this.serverCMD = serverCMD;
 	}
 
 }

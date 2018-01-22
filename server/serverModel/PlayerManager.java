@@ -6,7 +6,7 @@ import java.util.List;
 
 public class PlayerManager {
 	
-	final List<PlayerObj> activePlayers = new ArrayList<>();
+	final List<PlayerObj> Players = new ArrayList<>();
 	
 	public PlayerManager() {
 		
@@ -15,18 +15,18 @@ public class PlayerManager {
 	
 	public void addPlayer(int clientId, String name) {
 				
-		 boolean pAlreadyExists = activePlayers.stream()
+		 boolean pAlreadyExists = Players.stream()
 		            .anyMatch(p -> p.getClientId()==clientId);
 			
 		if (!pAlreadyExists) {
-			activePlayers.add(new PlayerObj(clientId, name));
+			Players.add(new PlayerObj(clientId, name));
 		}
 		
 	}
 	
 	public String GetPlayerName(int clientId) {
 		
-		PlayerObj result = activePlayers.stream()
+		PlayerObj result = Players.stream()
 				.filter(p -> p.getClientId()==clientId)
 				.findFirst()
 				.orElse(null);
@@ -35,9 +35,28 @@ public class PlayerManager {
 		
 	}
 	
+	public List<PlayerObj> GetListOfAllPlayers() {
+		
+		return this.Players;
+	}
+	
+	public List<PlayerObj> GetListOfAllOtherPlayers(int clientId) {
+		
+		List<PlayerObj> allOtherPlayers = new ArrayList<>();
+		this.GetListOfAllPlayers().forEach(
+	            (pObj) -> {
+	                if (pObj.getClientId() != clientId) {
+	                	allOtherPlayers.add(pObj);
+	                }
+	            }
+	    );
+		
+		return allOtherPlayers;
+	}
+	
 	public void removePlayer(int findThisId) {
 		
-		activePlayers.removeIf( i -> {
+		Players.removeIf( i -> {
 		      return i.getClientId() == findThisId;//No return statement will break compilation
 		    });
 	}
