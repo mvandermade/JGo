@@ -13,8 +13,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import serverModel.ConnectedClientObj;
 import serverModel.ConnectionManager;
 import serverModel.ConnectionToServerObj;
+import serverModel.GameManager;
+import serverModel.PlayerManager;
 import serverModel.ToClientPacket;
 import serverModel.ToServerPacket;
 //import serverView.GameServlet;
@@ -22,16 +25,27 @@ import serverModel.ToServerPacket;
 
 public class Server implements Runnable {
 
+	// Keep active
 	private final ServerSocket serverSocket;
+	// Storage
 	private final ConnectionManager connMan;
+	private final PlayerManager playMan;
+	private final GameManager gameMan;
+	
 	private Queue<Socket> connQueue = new ConcurrentLinkedQueue<Socket>();
 	private long pollQueueTime;
+	
+	// UTF16 escape chars
+	private final String DELIMITER1 = "\\$";
+	private final String DELIMITER2 = "\\_";
+	
+
 	
 	//private final ExecutorService pool;
 	
 	// This is a method to manage different threads more efficiently (Executors)
 	
-	public Server(int port, int poolSize) throws IOException {
+	public Server(int port) throws IOException {
 		
 		serverSocket = new ServerSocket(port);
 		
@@ -58,10 +72,18 @@ public class Server implements Runnable {
 		System.out.println("OK");
 		
 		// Setting
-		pollQueueTime = 500;
+		pollQueueTime = 200;
 		
 		// Storage
 		connMan = new ConnectionManager(serverSocket);
+		
+		// PlayerStorage
+		
+		playMan = new PlayerManager();
+		
+		// GameStorage
+				
+		gameMan = new GameManager();
 		
 		// Constructor ready... it is assumed now .run() is invoked by other launcher application
 	}
@@ -131,25 +153,109 @@ public class Server implements Runnable {
 					.sorted((f1, f2) -> Long.compare(f1.getStartTime(), f2.getStartTime())).
                     collect(Collectors.toList());
 			
-			System.out.print(".");
+			//System.out.print(".");
 			
 			servletQueue.forEach((c)->{
-				System.out.println(c.getInputLine());
-				connMan.transmitToClient(c.getClientId(), "----------------> Ok");
+
+				// Here an object is made ToClientObject
+				gameServlet(c);
 				
-				// Now let everyone know
-				connMan.getClients().forEach((others)->{
-					if (others.getClientId() != c.getClientId()) {
-						connMan.transmitToClient(others.getClientId(), c.getClientId() + "):    "+c.getInputLine());
-					}
-				}); // message all
-				
-			}); //transmit to Client
+			});
 			
 			
-		} // end while
+			//4. Packets are sent out async.
+			// Maybe put script here which will trigger Tx ?
+			connMan.transmitAllToClientQueue();
+			
+		} // end while true server loop
 		
 	} // end run
+
+	private enum ClientCMDs {
+		
+		NAME, 
+		MOVE,
+		PASS,
+		SETTINGS,
+		QUIT,
+		REQUESTGAME,
+		RANDOM
+		
+	}
+	
+	private void gameServlet(ToServerPacket cRx) {
+		// TODO Auto-generated method stub
+		// This method answers the Rx packet ToSeverPacket with an Tx ToClientPacket.
+		
+		// Creating "outbox"
+		List<ToClientPacket> outbox = new ArrayList<>();
+		
+		String clientCMD = cRx.getInputLine();
+		int clientId = cRx.getClientId();
+		// Expecting protocol 3
+		// COMMAND$PAYLOAD
+		// Check for it
+		try {
+			System.out.print("Client: ");
+			System.out.print(clientId);
+			String[] delimit1 = clientCMD.split(DELIMITER1);
+			
+			System.out.print(" delim1[0]: ");
+			System.out.print(delimit1[0]);
+			
+			System.out.print(" delim1[1]: ");
+			System.out.print(delimit1[1]);
+			
+			ClientCMDs clientCMDlist = ClientCMDs.valueOf(delimit1[0]);
+			
+			
+			String[] delimit2 = delimit1[1].split(DELIMITER2);
+			
+			switch (clientCMDlist) {
+			case NAME:
+				playMan.addPlayer(clientId, delimit2[0]);
+				outbox.add(new ToClientPacket(clientId, "HELLO, " +playMan.GetPlayerName(clientId)));
+				break;
+			case MOVE:
+				break;
+			case PASS:
+				break;
+			case SETTINGS:
+				break;
+			case QUIT:
+				break;
+			case REQUESTGAME:
+				break;
+			case RANDOM:
+				break;
+			default:
+				outbox.add(new ToClientPacket(clientId, "UNKNOWNCOMMAND"));
+				break;
+			}
+			
+		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
+			
+			outbox.add(new ToClientPacket(clientId, "UNKNOWNCOMMAND"));
+			outbox.add(new ToClientPacket(clientId, "OTHER$TRY AGAIN"));
+			e.printStackTrace();
+		}
+		
+		List<ToClientPacket> txQueue = outbox.stream()
+				.sorted((f1, f2) -> Long.compare(f1.getStartTime(), f2.getStartTime())).
+                collect(Collectors.toList());
+		
+		txQueue.forEach((tx)->{
+
+			// Here an object is made ToClientObject
+			connMan.addToClientTxQueue(tx);
+			
+		});
+		
+		
+		
+		
+		
+	}
 
 
 	

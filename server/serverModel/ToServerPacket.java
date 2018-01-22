@@ -12,8 +12,8 @@ public class ToServerPacket {
 		this.setClientId(clientId);
 		this.setStartTime(System.nanoTime());
 		
-		System.out.print("creating packet...");
-		System.out.println(this.stringify());
+		//System.out.print("creating inbound packet...");
+		//System.out.println(this.stringify());
 	}
 
 	private void setClientId(int clientId) {

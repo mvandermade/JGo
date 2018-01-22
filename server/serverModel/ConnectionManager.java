@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 public class ConnectionManager {
 	
@@ -16,7 +17,7 @@ public class ConnectionManager {
 	
 	// These objects can be sent by any client to the server
 	final Queue<ToServerPacket> toServerQueue = new ConcurrentLinkedQueue<ToServerPacket>();
-	final Queue<ToClientPacket> toClientQueue = new ConcurrentLinkedQueue<ToClientPacket>();
+	final Queue<ToClientPacket> toClientTxQueue = new ConcurrentLinkedQueue<ToClientPacket>();
 
 	public ConnectionManager(ServerSocket serverSocket) {
 		// TODO Auto-generated constructor stub
@@ -31,7 +32,7 @@ public class ConnectionManager {
 		// Booting an input thread after connection is noticed.
 		clients.add(new ConnectedClientObj(clientId, skt));
 		
-		transmitToClient(clientId, "...............................................it starts with hello world...............................................\nHi, je nummer is : " + clientId + "\nTyp iets en je bericht wordt rondgestuurd!...");
+		addToClientTxQueue(new ToClientPacket(clientId, "Hi, je unieke nummer is : " + clientId + "\nBegin (eenmalig) met NAME$JE TE KIEZEN NAAM"));
 		
 		(new Thread() {
 			public void run() {
@@ -70,6 +71,8 @@ public class ConnectionManager {
 	
 	public void removeClientById(int findThisId) {
 		
+		// here should be a internal tag for the server. (ERR or something)
+		
 		toServerQueue.add(new ToServerPacket(findThisId, "Observed broken connection, removed\n"));
 		clients.removeIf( i -> {
 		      return i.getClientId() == findThisId;//No return statement will break compilation
@@ -98,6 +101,50 @@ public class ConnectionManager {
 
 	public List<ConnectedClientObj> getClients() {
 		return clients;
+	}
+	
+	public void addToClientTxQueue(ToClientPacket toClientPacket) {
+		
+		this.toClientTxQueue.add(toClientPacket);
+		
+	}
+	
+	public void transmitAllToClientQueue() {
+		
+		List<ToClientPacket> localPolledQueue = new ArrayList<ToClientPacket>();
+		Boolean done = false;
+		
+		while(!done) {
+			
+			//System.out.print("poll");
+			
+			ToClientPacket polledObject = this.toClientTxQueue.poll();
+			
+			//System.out.print(polledObject);
+			
+			if (polledObject != null) {
+				
+				localPolledQueue.add(polledObject);
+				
+			} else {
+				
+				done = true;
+			}
+		}
+		
+		List<ToClientPacket> transmissionQueue = localPolledQueue.stream()
+				.sorted((f1, f2) -> Long.compare(f1.getStartTime(), f2.getStartTime())).
+                collect(Collectors.toList());
+		
+		//System.out.print(".");
+		
+		transmissionQueue.forEach((Tx)->{
+
+			// Here an object is made ToClientObject
+			this.transmitToClient(Tx.getClientId(), Tx.getOutputLine());
+			
+		});
+		
 	}
 	
 
