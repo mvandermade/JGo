@@ -18,10 +18,16 @@ public class ConnectionManager {
 	// These objects can be sent by any client to the server
 	final Queue<ToServerPacket> toServerQueue = new ConcurrentLinkedQueue<ToServerPacket>();
 	final Queue<ToClientPacket> toClientTxQueue = new ConcurrentLinkedQueue<ToClientPacket>();
+	private GameManager gameMan;
+	private PlayerManager playMan;
 
-	public ConnectionManager(ServerSocket serverSocket) {
+	public ConnectionManager(ServerSocket serverSocket, GameManager gameMan, PlayerManager playMan) {
 		// TODO Auto-generated constructor stub
+		
+		this.gameMan = gameMan;
+		this.playMan = playMan;
 	}
+	
 	
 	public void addNewClient(Socket skt) throws IOException {
 		
@@ -73,10 +79,12 @@ public class ConnectionManager {
 		
 		// here should be a internal tag for the server. (ERR or something)
 		
-		toServerQueue.add(new ToServerPacket(findThisId, "Observed broken connection, removed\n"));
+		toServerQueue.add(new ToServerPacket(findThisId, "INTERNAL ERROR: Observed broken connection, removed"));
 		clients.removeIf( i -> {
 		      return i.getClientId() == findThisId;//No return statement will break compilation
 		    });
+		
+		playMan.removePlayer(findThisId);
 		
 	}
 	
@@ -132,6 +140,13 @@ public class ConnectionManager {
 			}
 		}
 		
+		gameMan.getTxQueue().forEach(
+				gameTxQueueObj -> {localPolledQueue.add(gameTxQueueObj);}
+				);
+		
+		// And clear it
+		gameMan.clearTxQueue();
+		
 		List<ToClientPacket> transmissionQueue = localPolledQueue.stream()
 				.sorted((f1, f2) -> Long.compare(f1.getStartTime(), f2.getStartTime())).
                 collect(Collectors.toList());
@@ -139,10 +154,9 @@ public class ConnectionManager {
 		//System.out.print(".");
 		
 		transmissionQueue.forEach((Tx)->{
-
 			// Here an object is made ToClientObject
+			System.out.print(" |..."+"Server>" + Tx.getClientId()+"): " + Tx.getOutputLine());
 			this.transmitToClient(Tx.getClientId(), Tx.getOutputLine());
-			
 		});
 		
 	}
