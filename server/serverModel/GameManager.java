@@ -12,9 +12,6 @@ public class GameManager {
 	final List<ToClientPacket> txQueue = new ArrayList<>();
 	private PlayerManager playMan;
 	
-	
-
-
 	public GameManager(PlayerManager playMan) {
 		
 		this.playMan = playMan;
@@ -27,23 +24,86 @@ public class GameManager {
 		
 	}
 	
-	public void quit2PGameFor(int clientId) {
+	public void tryMoveFor(int clientId, int moveDataRow, int moveDataCol) {
 		
-		GameObj toQuitGameObj = games.stream()
+		try {
+			GameObj gameObj = getGameObjForClient(clientId);
+			
+			if (null != gameObj) {
+				
+				gameObj.doMoveForPlayer(clientId, moveDataRow, moveDataCol);
+				
+			} else {
+				
+				System.out.println("NOPe");
+			}
+		} catch (NullPointerException e){
+			
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void errorQuit2PGameFor(int clientId) {
+		
+		// Switch made to deduce P1 or P2
+		
+		GameObj errorToQuitGameObj = games.stream()
 				.filter(p -> p.getP1().getClientId()==clientId)
 				.findFirst()
 				.orElse(null);
 		
-		if (null == toQuitGameObj) {
+		if (null == errorToQuitGameObj) {
 			
-			toQuitGameObj = games.stream()
+			errorToQuitGameObj = games.stream()
+					.filter(p -> p.getP2().getClientId()==clientId)
+					.findFirst()
+					.orElse(null);
+			
+			// This query of grabbing P2 should give a result
+			errorToQuitGameObj.messageP1("ENDGAME", "QUIT cmd given by:"+playMan.getPlayerName(clientId));
+
+		} else {
+			
+			// Now signal that the game is being destroyed
+			errorToQuitGameObj.messageP2("ENDGAME", "QUIT cmd given by:"+playMan.getPlayerName(clientId));
+
+		}
+		
+		final int toRemoveGameId = errorToQuitGameObj.getGameId();
+		games.removeIf( gameObj -> {
+		      return gameObj.getGameId() == toRemoveGameId;//No return statement will break compilation
+		    });
+		
+		// Kick both out of the inGame status
+		errorToQuitGameObj.getP1().setIsInGame(false);
+		errorToQuitGameObj.getP2().setIsInGame(false);
+		
+	}
+	
+	public GameObj getGameObjForClient(int clientId) {
+		
+		GameObj gameObj = games.stream()
+				.filter(p -> p.getP1().getClientId()==clientId)
+				.findFirst()
+				.orElse(null);
+		
+		if (null == gameObj) {
+			
+			gameObj = games.stream()
 					.filter(p -> p.getP2().getClientId()==clientId)
 					.findFirst()
 					.orElse(null);
 			
 		}
 		
-
+		return gameObj;
+		
+	}
+	
+	public void quit2PGameFor(int clientId) {
+		
+		GameObj toQuitGameObj = getGameObjForClient(clientId);
 		
 		final int toRemoveGameId = toQuitGameObj.getGameId();
 		games.removeIf( gameObj -> {
@@ -57,7 +117,6 @@ public class GameManager {
 		// Now signal that the game is being destroyed
 		toQuitGameObj.messageBoth("ENDGAME", "QUIT cmd given by:"+playMan.getPlayerName(clientId));
 
-		
 		
 	}
 	
@@ -85,7 +144,8 @@ public class GameManager {
 	}
 	
 	public void processRequestQueue() {
-		
+	
+	
 		List<ToServerPacket> reqQueue = requestQueue.stream()
 				.sorted((f1, f2) -> Long.compare(f1.getStartTime(), f2.getStartTime())).
                 collect(Collectors.toList());
@@ -124,6 +184,7 @@ public class GameManager {
 				
 				new2PGame(P1[0], P2[0]);
 				
+				// clear matching queue
 				P1[0] = null;
 				P2[0] = null;
 				

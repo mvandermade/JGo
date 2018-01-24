@@ -107,6 +107,78 @@ public class GameObj {
 		
 	}
 	
+	public int getPlayerNumber(int clientId) {
+		
+		int playerId = 0; 
+		if (clientId == P1.getClientId()) {
+			
+			playerId = 1;
+			
+		} else if (clientId == P2.getClientId()) {
+			
+			playerId = 2;
+		}
+		return playerId;
+		
+	}
+	
+	public String getNextPlayerNameOf(int clientId) {
+		
+		String nextPlayerName = null;
+		//If you type in P1 it gets P2.
+		if (getPlayerNumber(clientId) == 1) {
+			// If self is 1, return 2
+			nextPlayerName = P2.getName();
+					
+		} else if (getPlayerNumber(clientId) == 2) {
+			// If self is 2, return 1
+			nextPlayerName = P1.getName();
+		}
+		
+		return nextPlayerName;
+	}
+	
+	public String getPlayerNameOf(int clientId) {
+		
+		String PlayerName = null;
+		//If you type in P1 it gets P2.
+		if (getPlayerNumber(clientId) == 1) {
+			// If self is 1, return 2
+			PlayerName = P1.getName();
+					
+		} else if (getPlayerNumber(clientId) == 2) {
+			// If self is 2, return 1
+			PlayerName = P2.getName();
+		}
+		
+		return PlayerName;
+		
+	}
+	
+	public void doMoveForPlayer(int clientId, int row, int col) {
+		
+		if(board.isMoveValid(row, col)) {
+			board.putStoneForPlayer(getPlayerNumber(clientId), row, col);
+			
+			// Answer to client $TURN$nextPlayerName$row_col$currentPlayerName
+			messageBoth("TURN", getNextPlayerNameOf(clientId)+"$"+row+"_"+col+"$"+getPlayerNameOf(clientId));
+
+		} else {
+			// Wrong
+			
+			messageClientId(clientId, "TURN", getPlayerNameOf(clientId)+"$"+row+"_"+col+"$"+getNextPlayerNameOf(clientId));
+
+		}
+		
+		
+	}
+	
+	public void messageClientId(int clientId, String CMD, String line) {
+		
+		gameTxQueue.add(new ToClientPacket(clientId, CMD, line));
+		
+	}
+	
 	public void messageP1(String CMD, String line) {
 		
 		gameTxQueue.add(new ToClientPacket(P1.getClientId(), CMD, line));

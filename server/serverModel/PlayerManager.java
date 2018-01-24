@@ -26,12 +26,17 @@ public class PlayerManager {
 	
 	public String getPlayerName(int clientId) {
 		
-		PlayerObj result = Players.stream()
+		PlayerObj playerObj = Players.stream()
 				.filter(p -> p.getClientId()==clientId)
 				.findFirst()
 				.orElse(null);
 		
-		return result.getName();
+		if (null != playerObj) {
+			return playerObj.getName();
+		} else {
+			
+			return null;
+		}
 		
 	}
 	

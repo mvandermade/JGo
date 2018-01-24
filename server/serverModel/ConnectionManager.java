@@ -78,13 +78,14 @@ public class ConnectionManager {
 	public void removeClientById(int findThisId) {
 		
 		// here should be a internal tag for the server. (ERR or something)
-		
-		toServerQueue.add(new ToServerPacket(findThisId, "INTERNAL ERROR: Observed broken connection, removed"));
+		System.out.println("Quit: Broken connection"+findThisId);
 		clients.removeIf( i -> {
 		      return i.getClientId() == findThisId;//No return statement will break compilation
 		    });
 		
+		gameMan.errorQuit2PGameFor(findThisId);
 		playMan.removePlayer(findThisId);
+		
 		
 	}
 	
@@ -155,7 +156,7 @@ public class ConnectionManager {
 		
 		transmissionQueue.forEach((Tx)->{
 			// Here an object is made ToClientObject
-			System.out.print(" |..."+"Server>" + Tx.getClientId()+"): " + Tx.getOutputLine());
+			System.out.println(" |..."+"Server>" + Tx.getClientId()+"): " + Tx.getOutputLine());
 			this.transmitToClient(Tx.getClientId(), Tx.getOutputLine());
 		});
 		

@@ -162,14 +162,20 @@ public class Server implements Runnable {
 					.sorted((f1, f2) -> Long.compare(f1.getStartTime(), f2.getStartTime())).
                     collect(Collectors.toList());
 			
-			//System.out.print(".");
+			
 			
 			servletQueue.forEach((c)->{
 
 				// Here an object is made ToClientObject
+				System.out.println("GOT..........");
+				System.out.println(c.getInputLine());
 				gameServlet(c);
+				System.out.println("...........OK");
+				
 				
 			});
+			
+			
 			
 			
 			
@@ -209,181 +215,259 @@ public class Server implements Runnable {
 		
 		List<ToClientPacket> outbox = new ArrayList<>();
 		
-		String inputLineCMD = cRx.getInputLine();
-		int clientId = cRx.getClientId();
-		
 		// Try to strip out the message block
 		
 		try {
+			
+			String inputLineCMD = cRx.getInputLine();
+			int clientId = cRx.getClientId();
 		
 			String[] inputLineSplit = inputLineCMD.split("\\"+getDELIMITER1());
-			ClientCMDs clientCMD = ClientCMDs.valueOf(inputLineSplit[0]);
+			ClientCMDs clientCMDEnumVal = ClientCMDs.valueOf(inputLineSplit[0]);
 			
-			switch (clientCMD) {
-			case NAME:
+
+			
+			// These commands only allowed if a NAME is set
+			if (null != playMan.getPlayerName(clientId)) {
 				
+				// if (false) .. not in game
+				if (playMan.getPlayerObj(clientId).getIsInGame()) {
+					
+					playerIsInGameServlet(cRx, outbox, clientCMDEnumVal, inputLineSplit);
+					
+				} else {
+					
+					playerNotInGameServlet(cRx, outbox, clientCMDEnumVal, inputLineSplit);
+				}
+				
+				playerGeneralServlet(cRx, outbox, clientCMDEnumVal, inputLineSplit);
+				
+			} else {
+				
+				playerAskNameServlet(cRx, outbox, clientCMDEnumVal, inputLineSplit);
+			}
+			
+		} catch (NullPointerException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
+			
+			e.printStackTrace();
+			outbox.add(new ToClientPacket(cRx.getClientId(), "CMDHINT","Need a valid command..."));
+			
+		}
+		
+		// Put all messages in queue. Will be sent out in step 4 alltogether in main.
+		outbox.stream()
+				.sorted((f1, f2) -> Long.compare(f1.getStartTime(), f2.getStartTime()))
+                .collect(Collectors.toList())
+                .forEach((toClientPacket)->{
+                	// Here an object is made ToClientObject (not yet sent)
+                	connMan.addToClientTxQueue(toClientPacket);
+		});
+		
+		System.out.println("\n^cmd processed" + new java.util.Date());
+		
+	}
+	
+	private void playerAskNameServlet(ToServerPacket cRx, List<ToClientPacket> outbox, ClientCMDs clientCMD,
+			String[] inputLineSplit) {
+		// The NAME command is always allowed
+		
+		int clientId = cRx.getClientId();
+		String inputLineCMD = cRx.getInputLine();
+		
+		switch (clientCMD) {
+		case NAME:
+			
+			String payloadNAME = null;
+			
+			try {
+			
 				String[] payload = inputLineSplit[1].split("\\"+getDELIMITER2());
-				String payloadNAME = payload[0];
+				payloadNAME = payload[0];
 				
-				//System.out.print(" delim2[1]: "); System.out.print(delimit2[1]);
-				playMan.addPlayer(clientId, payloadNAME);
+			} catch (ArrayIndexOutOfBoundsException e) {
 				
-				outbox.add(new ToClientPacket(clientId, "OTHER","Welcome, " +playMan.getPlayerName(clientId) + "."));
-				outbox.add(new ToClientPacket(clientId, "CMDHINT","LOBBY, REQUESTGAME$2$RANDOM"));
-				break;
-				
-			default:
-				
+				e.printStackTrace();
+				outbox.add(new ToClientPacket(clientId, "CMDHINT","Enter name after:"+inputLineCMD));
+
+			}
+			
+			//System.out.print(" delim2[1]: "); System.out.print(delimit2[1]);
+			playMan.addPlayer(clientId, payloadNAME);
+			
+			outbox.add(new ToClientPacket(clientId, "OTHER","Welcome, " +playMan.getPlayerName(clientId) + "."));
+			outbox.add(new ToClientPacket(clientId, "CMDHINT","LOBBY"));
+			break;
+			
+		default:
+			
+			outbox.add(new ToClientPacket(clientId, "UNKNOWNCMD",""));
+			
+		} // switch NAME, default
+	}
+
+	private void playerGeneralServlet(ToServerPacket cRx, List<ToClientPacket> outbox, ClientCMDs clientCMD,
+			String[] inputLineSplit) {
+		// TODO Auto-generated method stub
+		int clientId = cRx.getClientId();
+		
+		
+		// This part can only be accessed if ClientPlayerName exists
+		try {
+			switch (clientCMD) {
+			case SETTINGS:
+				// You can change this anytime, Before or after invoking RequestGame.
+				// Settings will be leading only if P1 position.
 				try {
+					playMan.setColourOf(clientId, inputLineSplit[1]);
 					
-					String ClientPlayerName = playMan.getPlayerName(clientId);
-					clientCMDServlet(cRx, outbox, clientCMD, inputLineSplit);
+					try {
+						//inputLineSplit[2];
+						playMan.setBoardSizeOf(clientId, inputLineSplit[2]);
+						
+					} catch (ArrayIndexOutOfBoundsException e) {
+						
+						outbox.add(new ToClientPacket(clientId, "CMDHINT","Check arg[2]:BoardSize: SETTINGS$"+inputLineSplit[1]+"$<ERROR>"));
+
+					}
 					
-				} catch(NullPointerException e) {
-					
-					e.printStackTrace();
-					outbox.add(new ToClientPacket(clientId, "UNKNOWNCMD","I don't know how to respond :)"));
-					
-				} // Try getName
+				} catch (ArrayIndexOutOfBoundsException e) {
+					outbox.add(new ToClientPacket(clientId, "CMDHINT","Check arg[1]:Colour: SETTINGS$<ERROR>"));
+				}
 				
-			} // switch NAME, default
+				outbox.add(new ToClientPacket(clientId, "OTHER","Your P1 Settings: Colour: "+playMan.getColourOf(clientId)+" Boardsize:" + playMan.getBoardSizeOf(clientId)));
+
+				break;
+			case LOBBY:
+				outbox.add(new ToClientPacket(clientId, "OTHER","Others connected to server: "+playMan.getListOfAllOtherPlayers(clientId).size()+". List of not-ingame:"));
+				
+				if (playMan.getListOfAllOtherPlayers(clientId).size() == 0) {
+					
+					outbox.add(new ToClientPacket(clientId, "CMDHINT","REQUESTGAME$2$RANDOM"));
+					
+				} else {
+					
+					String otherPlayersReply = playMan.getListOfAllOtherPlayers(clientId)
+				            .stream()
+				            .filter(playerObj -> !playerObj.getIsInGame())
+				            .map(playerObj -> "P: " + playerObj.getName()+", ")
+				            .collect(Collectors.joining());
+					
+					outbox.add(new ToClientPacket(clientId, "OTHER",otherPlayersReply));
+					
+					outbox.add(new ToClientPacket(clientId, "CMDHINT",">REQUESTGAME$2$RANDOM"));
+				}
+				
+				break;
+			case CHAT:
+				String[] payload = inputLineSplit[1].split("\\"+getDELIMITER2());
+				String payloadCHAT = payload[0];
+				String chatSender = playMan.getPlayerName(clientId);
+				
+				if(playMan.getListOfAllOtherPlayers(clientId).size() == 0) {
+					
+					outbox.add(new ToClientPacket(clientId, "ERROR","No players in lobby..."));
+
+					
+				} else {
+					playMan.getListOfAllOtherPlayers(clientId).stream().forEach(
+						op -> {
+							outbox.add(new ToClientPacket(op.getClientId(), "CHAT","FROM"+DELIMITER1+chatSender+DELIMITER1+payloadCHAT));
+						}
+					);
+					
+				}
+				break;
+			default:
+				// TODO: say something, but not double the error
+				break;
+			}
 			
 		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 			
-			outbox.add(new ToClientPacket(clientId, "CMDHINT","UNKNOWN:"+inputLineCMD));
-
+				outbox.add(new ToClientPacket(clientId, "ERROR", "UNKNOWNCOMMAND"));
+				outbox.add(new ToClientPacket(clientId, "ERROR", "TRY AGAIN"));
+				e.printStackTrace();
 		}
-		
-		List<ToClientPacket> txQueue = outbox.stream()
-				.sorted((f1, f2) -> Long.compare(f1.getStartTime(), f2.getStartTime())).
-                collect(Collectors.toList());
-		
-		
-		
-		// Put all messages in queue. Will be sent out in step 4 alltogether in main.
-		
-		txQueue.forEach((tx)->{
-
-			// Here an object is made ToClientObject (not yet sent)
-			connMan.addToClientTxQueue(tx);
-			
-		});
-		
-		System.out.println("\n^..." + new java.util.Date());
 		
 	}
 
-	private void clientCMDServlet(ToServerPacket cRx, List<ToClientPacket> outbox, ClientCMDs clientCMD, String[] inputLineSplit) {
+	private void playerIsInGameServlet(ToServerPacket cRx, List<ToClientPacket> outbox, ClientCMDs clientCMD,
+			String[] inputLineSplit) {
 		// TODO Auto-generated method stub
-		
 		int clientId = cRx.getClientId();
-		String ClientPlayerName = playMan.getPlayerName(clientId);
 		
-		// This part can only be accessed if ClientPlayerName exists
-		if (ClientPlayerName != null) {
-			try {
-				switch (clientCMD) {
-				case MOVE:
-					break;
-				case QUIT:
-					outbox.add(new ToClientPacket(clientId, "OTHER","Quitting..."));
-					gameMan.quit2PGameFor(clientId);
-					break;
-				case REQUESTGAME:
-					// Example what to expect: REQUESTGAME$<int players>$<string against>
-					try {
-						int amountOfPlayers= Integer.parseInt(inputLineSplit[1]);
-						String playingAgainst= inputLineSplit[2];
-						
-						gameMan.addToRequestQueue(cRx);
-						
-						// The queue will be processed by another step "the game manager"
-						gameMan.processRequestQueue();
-						
-					} catch(IllegalArgumentException | ArrayIndexOutOfBoundsException e) {					
-						outbox.add(new ToClientPacket(clientId, "CMDHINT","REQUESTGAME$2$RANDOM"));
-					}
+		
+		// This part can only be accessed if ClientPlayerName exists and IsInGame
+		try {
+			switch (clientCMD) {
+			case MOVE:
+				
+				int moveDataRow = 0;
+				int moveDataCol = 0;
+				
+				try {
 					
-					// Ignore this for now...
-					
-					break;
-				case SETTINGS:
-					// You can change this anytime, Before or after invoking RequestGame.
-					// Settings will be leading only if P1 position.
-					try {
-						playMan.setColourOf(clientId, inputLineSplit[1]);
-						
-						try {
-							//inputLineSplit[2];
-							playMan.setBoardSizeOf(clientId, inputLineSplit[2]);
-							
-						} catch (ArrayIndexOutOfBoundsException e) {
-							
-							outbox.add(new ToClientPacket(clientId, "CMDHINT","Check arg[2]:BoardSize: SETTINGS$"+inputLineSplit[1]+"$<ERROR>"));
+					// To decrypt: MOVE%1_2
+					String[] moveData = inputLineSplit[1].split("\\"+getDELIMITER2());
+					moveDataRow = Integer.parseInt(moveData[0]);
+					moveDataCol = Integer.parseInt(moveData[1]);
+					gameMan.tryMoveFor(clientId, moveDataRow, moveDataCol);
 
-						}
-						
-					} catch (ArrayIndexOutOfBoundsException e) {
-						outbox.add(new ToClientPacket(clientId, "CMDHINT","Check arg[1]:Colour: SETTINGS$<ERROR>"));
-					}
+				} catch (NullPointerException | ArrayIndexOutOfBoundsException | NumberFormatException e) {
 					
-					outbox.add(new ToClientPacket(clientId, "OTHER","Your P1 Settings: Colour: "+playMan.getColourOf(clientId)+" Boardsize:" + playMan.getBoardSizeOf(clientId)));
+					e.printStackTrace();
+					outbox.add(new ToClientPacket(clientId, "CMDHINT","MOVE$row(int)_col(int)"));
 
-					break;
-				case LOBBY:
-					outbox.add(new ToClientPacket(clientId, "OTHER","Others connected to server: "+playMan.getListOfAllOtherPlayers(clientId).size()+". List of not-ingame:"));
-					
-					if (playMan.getListOfAllOtherPlayers(clientId).size() == 0) {
-						
-						outbox.add(new ToClientPacket(clientId, "CMDHINT","REQUESTGAME$2$RANDOM"));
-						
-					} else {
-						
-						
-						String otherPlayersReply = playMan.getListOfAllOtherPlayers(clientId)
-					            .stream()
-					            .filter(playerObj -> !playerObj.getIsInGame())
-					            .map(playerObj -> "P: " + playerObj.getName()+", ")
-					            .collect(Collectors.joining());
-						
-						outbox.add(new ToClientPacket(clientId, "OTHER",otherPlayersReply));
-						
-						outbox.add(new ToClientPacket(clientId, "CMDHINT",">REQUESTGAME$2$RANDOM"));
-					}
-					break;
-				case CHAT:
-					String[] payload = inputLineSplit[1].split("\\"+getDELIMITER2());
-					String payloadCHAT = payload[0];
-					String chatSender = playMan.getPlayerName(clientId);
-					
-					if(playMan.getListOfAllOtherPlayers(clientId).size() == 0) {
-						
-						outbox.add(new ToClientPacket(clientId, "ERROR","No players in lobby..."));
-	
-						
-					} else {
-						playMan.getListOfAllOtherPlayers(clientId).stream().forEach(
-							op -> {
-								outbox.add(new ToClientPacket(op.getClientId(), "CHAT","FROM"+DELIMITER1+chatSender+DELIMITER1+payloadCHAT));
-							}
-						);
-						
-					}
-					
-					break;
-				default:
-					outbox.add(new ToClientPacket(clientId, "ERROR", "UNKNOWNCOMMAND"));
-					break;
 				}
 				
-			} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
-				
-					outbox.add(new ToClientPacket(clientId, "ERROR", "UNKNOWNCOMMAND"));
-					outbox.add(new ToClientPacket(clientId, "ERROR", "TRY AGAIN"));
-					e.printStackTrace();
+				break;
+			case QUIT:
+				outbox.add(new ToClientPacket(clientId, "OTHER","Quitting..."));
+				gameMan.quit2PGameFor(clientId);
+				break;
+			default:
+				// TODO: say something, but not double the error
+				break;
 			}
-		} // endif ClientPlayerName
-		
+			
+		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
+			
+				outbox.add(new ToClientPacket(clientId, "ERROR", "UNKNOWNCOMMAND"));
+				outbox.add(new ToClientPacket(clientId, "ERROR", "TRY AGAIN"));
+				e.printStackTrace();
+		}
+	}
+
+	private void playerNotInGameServlet(ToServerPacket cRx, List<ToClientPacket> outbox, ClientCMDs clientCMD, String[] inputLineSplit) {
+		// TODO Auto-generated method stub
+		try {
+			int clientId = cRx.getClientId();
+			
+			switch (clientCMD) {
+			case REQUESTGAME:
+				// Example what to expect: REQUESTGAME$<int players>$<string against>
+				try {
+					// Challenge
+					//int amountOfPlayers= Integer.parseInt(inputLineSplit[1]);
+					//String playingAgainst= inputLineSplit[2];
+					
+					gameMan.addToRequestQueue(cRx);
+					
+					// The queue will be processed by another step "the game manager"
+					gameMan.processRequestQueue();
+					
+				} catch(IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
+					outbox.add(new ToClientPacket(clientId, "CMDHINT","RequestGame error"));
+				}				
+				break;
+			default:
+				break;
+			}
+			
+		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
+			outbox.add(new ToClientPacket(cRx.getClientId(), "CMDHINT","RequestGame error. Try again"));
+		}
+
 	}
 
 	public static String getDELIMITER2() {

@@ -6,6 +6,8 @@ public class Board {
 	
 	int[][] mat;
 	int boardSize;
+	int P1 = 1;
+	int P2 = 2;
 	
 	public Board(int boardSize) {
 		
@@ -34,6 +36,26 @@ public class Board {
 		
 	}
 	
+	public Boolean isMoveValid(int row, int col) {
+		
+		Boolean response = false;
+		
+		// 1 is the field taken ?
+		
+		if (this.mat[row][col] == 0) {
+			
+			response=true;
+			
+		}
+		
+		return response;
+	}
+	
 	// Leftabove = mat[0][0] [row][collumn]
+	
+	public void putStoneForPlayer(int PlayerNo, int row, int col) {
+		
+		this.mat[row][col] = PlayerNo;
+	}
 
 }
