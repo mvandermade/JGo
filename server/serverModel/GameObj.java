@@ -21,25 +21,31 @@ public class GameObj {
 	private String P2DefaultColourTaken = "ORANGE";
 	private String defaultBoardSize = "13";
 	
+	//Delimiter 1 (! no connection)
 	private String D1 = "$";
+	private String D2 = "_";
 	
 	// Board type
 	board.Board board;
 	
 	// Queue for this game (reference to txQueue of gameManager (final))
 	private List<ToClientPacket> gameTxQueue;
+
+	private int hasTurnClientId;
 	
 	
 	GameObj(int gameId, List<ToClientPacket> txQueue, PlayerObj P1, PlayerObj P2) {
 		
 		this.P1 = P1;
 		this.P2 = P2;
+		this.hasTurnClientId = P1.getClientId();
+		
 		this.gameTxQueue = txQueue;
 		this.setGameId(gameId);
 		
 		// Boot up new game		
-		P1.setIsInGame(true); messageP1("OTHER","Playerstatus: Ingame");
-		P2.setIsInGame(true); messageP2("OTHER","Playerstatus: Ingame");
+		P1.setIsInGame(true); messageP1("OTHER","Playerstatus: Ingame as Player 1! Good to see you, "+getP1().getName());
+		P2.setIsInGame(true); messageP2("OTHER","Playerstatus: Ingame as Player 2! Good to see you, "+getP2().getName());
 		
 		// Setting up boardSize
 		if (P1.getSettingBoardSize() == null) {
@@ -101,10 +107,31 @@ public class GameObj {
 		
 		this.board = new board.Board(this.boardSize);
 		
-		board.toLinePrint();
+		messageBoth("INFO", "\n" + board.toStringClient());
 		
+		// Send out START protocol
 		messageBoth("START",this.P1Colour+D1+this.boardSize);
+		// Send out TURN protocol
+		messageBoth("TURN", getPlayerNameOf(this.hasTurnClientId)+D1+"FIRST"+D1+getPlayerNameOf(this.hasTurnClientId));
 		
+	}
+	
+	public int getBoardSize() {
+		return boardSize;
+	}
+
+	public PlayerObj getPlayerObj(int clientId) {
+		PlayerObj playerObj = null; 
+		if (clientId == P1.getClientId()) {
+			
+			playerObj = getP1();
+			
+		} else if (clientId == P2.getClientId()) {
+			
+			playerObj = getP2();
+		}
+		
+		return playerObj;
 	}
 	
 	public int getPlayerNumber(int clientId) {
@@ -138,6 +165,24 @@ public class GameObj {
 		return nextPlayerName;
 	}
 	
+	public int getNextPlayerClientIdOf(int clientId) {
+		
+		int nextPlayerClientId = 0;
+		//If you type in P1 it gets P2.
+		if (getPlayerNumber(clientId) == 1) {
+			// If self is 1, return 2
+			nextPlayerClientId = P2.getClientId();
+					
+		} else if (getPlayerNumber(clientId) == 2) {
+			// If self is 2, return 1
+			nextPlayerClientId = P1.getClientId();
+		}
+		
+		return nextPlayerClientId;
+	}
+	
+	
+	
 	public String getPlayerNameOf(int clientId) {
 		
 		String PlayerName = null;
@@ -157,19 +202,31 @@ public class GameObj {
 	
 	public void doMoveForPlayer(int clientId, int row, int col) {
 		
-		if(board.isMoveValid(row, col)) {
-			board.putStoneForPlayer(getPlayerNumber(clientId), row, col);
-			
-			// Answer to client $TURN$nextPlayerName$row_col$currentPlayerName
-			messageBoth("TURN", getNextPlayerNameOf(clientId)+"$"+row+"_"+col+"$"+getPlayerNameOf(clientId));
-
-		} else {
-			// Wrong
-			
-			messageClientId(clientId, "TURN", getPlayerNameOf(clientId)+"$"+row+"_"+col+"$"+getNextPlayerNameOf(clientId));
-
-		}
 		
+		if(clientId == this.hasTurnClientId) {
+			if(board.isMoveValid(row, col)) {
+				
+				board.putStoneForPlayer(getPlayerNumber(clientId), row, col);
+				
+				// Switch turn (depending on implementation)
+				this.hasTurnClientId = getNextPlayerClientIdOf(this.hasTurnClientId);
+				
+				// Answer to client $TURN$nextPlayerName$row_col$currentPlayerName
+				messageBoth("TURN", getPlayerNameOf(this.hasTurnClientId)+D1+row+D2+col+D1+getNextPlayerNameOf(this.hasTurnClientId));
+				
+				board.toLinePrint();
+				
+			} else {
+				// Wrong
+				messageClientId(clientId, "ERROR", "Invalid Move !");
+				messageClientId(clientId, "TURN", getPlayerNameOf(this.hasTurnClientId)+D1+row+D2+col+D1+getNextPlayerNameOf(this.hasTurnClientId));
+	
+			}
+		} else {
+			
+			messageClientId(clientId, "ERROR", "Arr, wait yer turn");
+			
+		}
 		
 	}
 	

@@ -411,7 +411,19 @@ public class Server implements Runnable {
 					String[] moveData = inputLineSplit[1].split("\\"+getDELIMITER2());
 					moveDataRow = Integer.parseInt(moveData[0]);
 					moveDataCol = Integer.parseInt(moveData[1]);
-					gameMan.tryMoveFor(clientId, moveDataRow, moveDataCol);
+					
+					// Here already apply the rule to correct for starting at 0 instead of 1 (TUI)
+					moveDataRow = moveDataRow - 1;
+					moveDataCol = moveDataCol - 1;
+					
+					if (moveDataRow < 1 || moveDataRow > gameMan.getGameObjForClient(clientId).getBoardSize() || moveDataCol < 1 || moveDataRow > gameMan.getGameObjForClient(clientId).getBoardSize()) {
+						
+					} else {
+						
+						outbox.add(new ToClientPacket(clientId, "ERROR","OUTOFBOARDBOUNDS"));
+						gameMan.tryMoveFor(clientId, moveDataRow, moveDataCol);
+						
+					}
 
 				} catch (NullPointerException | ArrayIndexOutOfBoundsException | NumberFormatException e) {
 					

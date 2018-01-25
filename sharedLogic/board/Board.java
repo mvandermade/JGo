@@ -1,11 +1,10 @@
 package board;
 
-
-
 public class Board {
 	
 	int[][] mat;
 	int boardSize;
+
 	int P1 = 1;
 	int P2 = 2;
 	
@@ -33,6 +32,70 @@ public class Board {
 		}
 		System.out.println(".............");
 		
+	}
+	
+	public String toStringClient() {
+		
+		String lines = "";
+		for (int r = 0; r < boardSize; r++)	{
+			
+			if (r == 0) {
+				// Write till 99
+				// or like this:
+				// 9
+				// 9
+				
+				String colLabelWriter1 = "   ";
+				String colLabelWriter2 = "   ";
+				String colLabelSpacer3 = "   ";
+				
+				for (int colLabelInt = 0; colLabelInt < boardSize; colLabelInt++) {
+					String colLabelStr = ""+colLabelInt+1;
+					
+					// Array boardsize
+					if (colLabelInt < 9) {
+						// Two spaces
+						colLabelWriter1 = colLabelWriter1 + "  ";						
+					} else {
+						// Number, One space
+						colLabelWriter1 = colLabelWriter1 + colLabelStr.charAt(1) + " ";
+					}
+					
+					colLabelWriter2 = colLabelWriter2 + colLabelStr.charAt(0) + " ";
+					
+					colLabelSpacer3 = colLabelSpacer3 + "  ";
+					
+				}
+				
+				lines = lines + colLabelWriter1 + "\n" + colLabelWriter2 + "\n" + colLabelSpacer3 + "\n";
+				
+			}
+			
+			// Now push in the numberline
+			
+			String numberLine = "";
+			
+			// Correction r+1
+			if (r < 9) {
+				
+				numberLine = numberLine + " " + r+1 + " ";
+				
+			} else {
+				
+				numberLine = numberLine + r+1 + " ";
+			}
+			
+			for (int c = 0; c < boardSize; c++)	{
+				numberLine = numberLine + this.mat[r][c] + " ";
+			}
+			
+			// Write the line
+			
+			lines = lines + numberLine + "\n";
+			
+		}
+		
+		return lines;
 		
 	}
 	

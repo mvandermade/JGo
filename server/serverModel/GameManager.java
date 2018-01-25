@@ -35,7 +35,7 @@ public class GameManager {
 				
 			} else {
 				
-				System.out.println("NOPe");
+				System.out.println("move: gameobject is null @GameManager row 38");
 			}
 		} catch (NullPointerException e){
 			
