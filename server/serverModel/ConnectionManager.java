@@ -39,6 +39,8 @@ public class ConnectionManager {
 		clients.add(new ConnectedClientObj(clientId, skt));
 		
 		addToClientTxQueue(new ToClientPacket(clientId, "OTHER", "Hi, je unieke nummer is : " + clientId + "...Begin (eenmalig) met NAME$jeNaam..."));
+		addToClientTxQueue(new ToClientPacket(clientId, "CMDHINTS", "CHAT, NAME$<name>, LOBBY, MOVE$r_c, MOVE$PASS, REQUESTGAME, SETTINGS, QUIT, "));
+
 		
 		(new Thread() {
 			public void run() {

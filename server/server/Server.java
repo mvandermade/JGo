@@ -193,11 +193,9 @@ public class Server implements Runnable {
 		
 		NAME, 
 		MOVE,
-		PASS,
 		SETTINGS,
 		QUIT,
 		REQUESTGAME,
-		RANDOM,
 		LOBBY,
 		CHAT
 		
@@ -295,7 +293,6 @@ public class Server implements Runnable {
 			playMan.addPlayer(clientId, payloadNAME);
 			
 			outbox.add(new ToClientPacket(clientId, "OTHER","Welcome, " +playMan.getPlayerName(clientId) + "."));
-			outbox.add(new ToClientPacket(clientId, "CMDHINT","LOBBY"));
 			break;
 			
 		default:
@@ -412,15 +409,18 @@ public class Server implements Runnable {
 					moveDataRow = Integer.parseInt(moveData[0]);
 					moveDataCol = Integer.parseInt(moveData[1]);
 					
-					// Here already apply the rule to correct for starting at 0 instead of 1 (TUI)
-					moveDataRow = moveDataRow - 1;
-					moveDataCol = moveDataCol - 1;
 					
 					if (moveDataRow < 1 || moveDataRow > gameMan.getGameObjForClient(clientId).getBoardSize() || moveDataCol < 1 || moveDataRow > gameMan.getGameObjForClient(clientId).getBoardSize()) {
 						
+						// Here already apply the rule to correct for starting at 0 instead of 1 (TUI)
+						moveDataRow = moveDataRow - 1;
+						moveDataCol = moveDataCol - 1;
+						gameMan.getGameObjForClient(clientId).messageClientId(clientId, "ERROR", "MOVE NOT ALLOWED, OUT OF BOUNDS");
+						
 					} else {
 						
-						outbox.add(new ToClientPacket(clientId, "ERROR","OUTOFBOARDBOUNDS"));
+						moveDataRow = moveDataRow - 1;
+						moveDataCol = moveDataCol - 1;
 						gameMan.tryMoveFor(clientId, moveDataRow, moveDataCol);
 						
 					}

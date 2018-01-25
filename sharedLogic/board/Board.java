@@ -50,7 +50,9 @@ public class Board {
 				String colLabelSpacer3 = "   ";
 				
 				for (int colLabelInt = 0; colLabelInt < boardSize; colLabelInt++) {
-					String colLabelStr = ""+colLabelInt+1;
+					
+					int colLabelIntPlus1 = colLabelInt+1;
+					String colLabelStr = ""+colLabelIntPlus1;
 					
 					// Array boardsize
 					if (colLabelInt < 9) {
@@ -76,13 +78,15 @@ public class Board {
 			String numberLine = "";
 			
 			// Correction r+1
+			int rplus1 = r + 1;
+			
 			if (r < 9) {
 				
-				numberLine = numberLine + " " + r+1 + " ";
+				numberLine = numberLine + " " + rplus1 + " ";
 				
 			} else {
 				
-				numberLine = numberLine + r+1 + " ";
+				numberLine = numberLine + rplus1 + " ";
 			}
 			
 			for (int c = 0; c < boardSize; c++)	{
