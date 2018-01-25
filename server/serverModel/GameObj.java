@@ -13,17 +13,26 @@ public class GameObj {
 	private String P1Colour = null; // (P2 follows the inverse, cannot be equal)
 	private String P2Colour = null;
 	
+	// Feeder: flips to true if pass is hit. 2nd time PASS is then observable.
+	// MOVE makes it false
+	private Boolean P1PassState = false;
+	private Boolean P2PassState = false;
+	
 	private int boardSize = 0; // is converted string to int
 	
-	private String P1DefaultColour = "WHITE";
-	private String P2DefaultColour = "BLACK";
-	// If the preferred colour of P1 is white
+	// System preferences
+	
+	private String P1DefaultColour = "BLACK";
+	private String P2DefaultColour = "WHITE";
+	// If the preferred colour of P1 is black
 	private String P2DefaultColourTaken = "ORANGE";
 	private String defaultBoardSize = "13";
 	
-	//Delimiter 1 (! no connection)
+	//Delimiter 1&2 (! no connection)
 	private String D1 = "$";
 	private String D2 = "_";
+	
+	// 
 	
 	// Board type
 	board.Board board;
@@ -149,6 +158,36 @@ public class GameObj {
 		
 	}
 	
+	public Boolean getPlayerPassState(int clientId) {
+		
+		Boolean passState = null; 
+		if (clientId == P1.getClientId()) {
+			
+			passState = P1PassState;
+			
+		} else if (clientId == P2.getClientId()) {
+			
+			passState = P2PassState;
+		}
+		return passState;
+		
+	}
+	
+	public void setPlayerPassState(int clientId, Boolean passState) {
+		
+		if (clientId == P1.getClientId()) {
+			
+			P1PassState = passState;
+			
+		} else if (clientId == P2.getClientId()) {
+			
+			P2PassState = passState;
+		}
+		
+	}
+	
+	
+	
 	public String getNextPlayerNameOf(int clientId) {
 		
 		String nextPlayerName = null;
@@ -216,6 +255,9 @@ public class GameObj {
 				
 				messageBoth("TURN", getNextPlayerNameOf(this.hasTurnClientId)+D1+rowplus1+D2+colplus1+D1+getPlayerNameOf(this.hasTurnClientId));
 				
+				// Reset pass
+				setPlayerPassState(clientId, false);
+				
 				// Switch turn (depending on implementation)
 				this.hasTurnClientId = getNextPlayerClientIdOf(this.hasTurnClientId);
 				
@@ -231,6 +273,43 @@ public class GameObj {
 			messageClientId(clientId, "ERROR", "Arr, wait yer turn");
 			
 		}
+		
+	}
+	
+	public Boolean passForPlayer(int clientId) {
+		
+		Boolean doPassQuit = false;
+		
+		if(clientId == this.hasTurnClientId) {
+			
+			// Player did already pass once:
+			if(getPlayerPassState(clientId)) {
+				
+				doPassQuit = true;
+			
+			} else {
+				
+				// Answer to client $TURN$nextPlayerName$row_col$currentPlayerName
+				messageBoth("INFO", "\n" + board.toStringClient());
+				
+				messageBoth("TURN", getNextPlayerNameOf(this.hasTurnClientId)+D1+"PASS"+D1+getPlayerNameOf(this.hasTurnClientId));
+				
+				
+				
+				// Switch turn (depending on implementation)
+				this.hasTurnClientId = getNextPlayerClientIdOf(this.hasTurnClientId);
+				
+				setPlayerPassState(clientId, true);
+				
+			}
+				
+		} else {
+			
+			messageClientId(clientId, "ERROR", "Arr, wait yer turn to PASS");
+			
+		}
+		
+		return doPassQuit;
 		
 	}
 	

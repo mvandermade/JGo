@@ -90,7 +90,13 @@ public class Board {
 			}
 			
 			for (int c = 0; c < boardSize; c++)	{
-				numberLine = numberLine + this.mat[r][c] + " ";
+				
+				if (this.mat[r][c] == 0) {
+					numberLine = numberLine + "+" + " ";
+				} else {
+					
+					numberLine = numberLine + this.mat[r][c] + " ";
+				}
 			}
 			
 			// Write the line

@@ -44,6 +44,30 @@ public class GameManager {
 		
 	}
 	
+	public void passFor(int clientId) {
+		
+		try {
+			GameObj gameObj = getGameObjForClient(clientId);
+			
+			if (null != gameObj) {
+				
+				if (gameObj.passForPlayer(clientId)) {
+					
+					this.quit2PGameFor(clientId);
+					
+				};
+				
+			} else {
+				
+				System.out.println("move: gameobject is null @GameManager row 38");
+			}
+		} catch (NullPointerException e) {
+			
+			e.printStackTrace();
+		}
+		
+	}
+	
 	public void errorQuit2PGameFor(int clientId) {
 		
 		// Switch made to deduce P1 or P2

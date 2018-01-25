@@ -406,23 +406,31 @@ public class Server implements Runnable {
 					
 					// To decrypt: MOVE%1_2
 					String[] moveData = inputLineSplit[1].split("\\"+getDELIMITER2());
-					moveDataRow = Integer.parseInt(moveData[0]);
-					moveDataCol = Integer.parseInt(moveData[1]);
 					
-					
-					if (moveDataRow < 1 || moveDataRow > gameMan.getGameObjForClient(clientId).getBoardSize() || moveDataCol < 1 || moveDataRow > gameMan.getGameObjForClient(clientId).getBoardSize()) {
+					if(moveData[0].equals("PASS")) {
 						
-						// Here already apply the rule to correct for starting at 0 instead of 1 (TUI)
-						moveDataRow = moveDataRow - 1;
-						moveDataCol = moveDataCol - 1;
-						gameMan.getGameObjForClient(clientId).messageClientId(clientId, "ERROR", "MOVE NOT ALLOWED, OUT OF BOUNDS");
+						gameMan.passFor(clientId);
 						
 					} else {
+					
+						moveDataRow = Integer.parseInt(moveData[0]);
+						moveDataCol = Integer.parseInt(moveData[1]);
 						
-						moveDataRow = moveDataRow - 1;
-						moveDataCol = moveDataCol - 1;
-						gameMan.tryMoveFor(clientId, moveDataRow, moveDataCol);
-						
+						if (moveDataRow < 1 || moveDataRow > gameMan.getGameObjForClient(clientId).getBoardSize() || moveDataCol < 1 || moveDataRow > gameMan.getGameObjForClient(clientId).getBoardSize()) {
+							
+							// Here already apply the rule to correct for starting at 0 instead of 1 (TUI)
+							moveDataRow = moveDataRow - 1;
+							moveDataCol = moveDataCol - 1;
+							// Send message
+							gameMan.getGameObjForClient(clientId).messageClientId(clientId, "ERROR", "MOVE NOT ALLOWED, OUT OF BOUNDS");
+							
+						} else {
+							
+							moveDataRow = moveDataRow - 1;
+							moveDataCol = moveDataCol - 1;
+							gameMan.tryMoveFor(clientId, moveDataRow, moveDataCol);
+							
+						}
 					}
 
 				} catch (NullPointerException | ArrayIndexOutOfBoundsException | NumberFormatException e) {
