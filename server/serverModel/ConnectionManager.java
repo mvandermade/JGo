@@ -35,6 +35,7 @@ public class ConnectionManager {
 		
 		System.out.println("ConnectionManager: NEW client " + clientId);
 		
+		
 		// Booting an input thread after connection is noticed.
 		clients.add(new ConnectedClientObj(clientId, skt));
 		

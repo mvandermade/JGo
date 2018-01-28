@@ -66,11 +66,12 @@ public class Client {
 				System.out.println("Need a name to continue");
 				e.printStackTrace();
 			}
-			System.out.println("Welcome, "+playerName+"! Please enter the IP or Hostname of a server:");
+			System.out.println("Client: got:, "+playerName+" as input, please enter the IP or Hostname of a server:");
 		}
 		
 		clientOutToServerQueue.add(new ClientOutToServerPacket("NAME"+DELIMITER1+playerName));
 		
+		clientOutToServerQueue.add(new ClientOutToServerPacket("REQUESTGAME"));
 		// Repeate the playerName bufferedreader concept for IP and port (parseToInt)
 		
 		
@@ -349,6 +350,20 @@ public class Client {
 							// TURN$OPPONENT$1_2$YOU
 							// TURN$YOU$2_2$OPPONENT
 							// TURN$<TAKE>$<MOVE>$<BYLAST>
+						} else if(inputLineSplit[2].equals("PASS")) {
+							
+							if (playerName.equals(inputLineSplit[1])) {
+								
+								System.out.println("Opponent passed");
+								
+								gogui.changeGuiTitle("TURN "+playerName);
+								
+							} else {
+								
+								gogui.changeGuiTitle(playerName);
+								
+							}
+							
 						} else {
 							
 							String takeNext = inputLineSplit[1];
@@ -445,7 +460,7 @@ public class Client {
 		// Internal tracking
 		board = new board.Board(boardSize);
 		
-		gogui = new GoGUIIntegrator(true, false, boardSize);
+		gogui = new GoGUIIntegrator(true, true, boardSize);
 		
         gogui.startGUI();
         gogui.setBoardSize(boardSize);

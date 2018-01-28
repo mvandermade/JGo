@@ -58,6 +58,10 @@ public class GameManager {
 			
 			if (null != gameObj) {
 				
+				// A player can quit by 2 subsequent passes.
+				// This is kept in the logic of the return value of passForPlayer.
+				// True = pass & quit. False = pass
+				
 				if (gameObj.passForPlayer(clientId)) {
 					
 					this.quit2PGameFor(clientId);

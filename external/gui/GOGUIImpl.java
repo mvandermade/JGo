@@ -249,20 +249,19 @@ public class GOGUIImpl extends Application {
         
         List<Circle> clickables = new ArrayList<>();
         List<Text> clickablesText = new ArrayList<>();
-        int addCircleOuterRadius = 24;
-        int addCircleRadius = 10;
-        int labelCircleRadius = addCircleOuterRadius + addCircleOuterRadius/3;
+        int addCircleRadius = 13;
+        int labelCircleRadius = 36;
         for (int xCoord = 1; xCoord <= height; xCoord++) {
         	for (int yCoord = 1; yCoord <= width; yCoord++) {
         		
-        		Circle addCircleOuter = new Circle(addCircleOuterRadius);
-        		addCircleOuter.relocate(xCoord * squareSize - addCircleOuterRadius, yCoord * squareSize - addCircleOuterRadius);
-    			addCircleOuter.setStroke(Color.grayRgb(100, 0.3));
-    			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
+        		//Circle addCircleOuter = new Circle(addCircleOuterRadius);
+        		//addCircleOuter.relocate(xCoord * squareSize - addCircleOuterRadius, yCoord * squareSize - addCircleOuterRadius);
+    			//addCircleOuter.setStroke(Color.grayRgb(100, 0.3));
+    			//addCircleOuter.setFill(Color.grayRgb(100, 0.1));
         		
         		Circle addCircle = new Circle(addCircleRadius);
-        		addCircle.setStroke(Color.BLUE);
-        		addCircle.setFill(Color.ORANGE);
+        		addCircle.setStroke(Color.grayRgb(100, 0.3));
+        		addCircle.setFill(Color.grayRgb(100, 0.1));
         		addCircle.relocate(xCoord * squareSize - addCircleRadius, yCoord * squareSize - addCircleRadius);
         		
         		Text labelCircle = new Text();
@@ -285,53 +284,59 @@ public class GOGUIImpl extends Application {
         		});
         		
         		addCircle.setOnMouseEntered(e-> {
-        			addCircle.setFill(Color.BLACK);
-        			addCircleOuter.setStroke(Color.grayRgb(100, 0.8));
-        			addCircleOuter.setFill(Color.grayRgb(100, 0.5));
+        			addCircle.setFill(Color.ORANGE);
+        			addCircle.setStroke(Color.WHITE);
+        			//addCircleOuter.setStroke(Color.grayRgb(100, 0.1));
+        			//addCircleOuter.setFill(Color.grayRgb(100, 0.1));
         			labelCircle.setVisible(true);
         		});
         		
         		addCircle.setOnMouseExited(e-> {
-        			addCircle.setFill(Color.ORANGE);
-        			addCircleOuter.setStroke(Color.grayRgb(100, 0.3));
-        			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
+        			addCircle.setFill(Color.grayRgb(100, 0.1));
+        			addCircle.setStroke(Color.grayRgb(100, 0.3));
+        			//addCircleOuter.setStroke(Color.grayRgb(100, 0.1));
+        			//addCircleOuter.setFill(Color.grayRgb(100, 0.1));
         			labelCircle.setVisible(false);
         		});
         		
         		// Outer blob
-        		addCircleOuter.setOnMouseEntered(e -> {
-        			
-        			addCircle.setFill(Color.WHITE);
-        			addCircleOuter.setStroke(Color.grayRgb(100, 0.8));
-        			addCircleOuter.setFill(Color.grayRgb(100, 0.5));
-        		});
-        		
-        		addCircleOuter.setOnMouseExited(e -> {
-        			
-        			addCircle.setFill(Color.ORANGE);
-        			addCircleOuter.setStroke(Color.grayRgb(100, 0.3));
-        			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
-        			
-        		});
+//        		addCircleOuter.setOnMouseEntered(e -> {
+//        			
+//        			addCircle.setFill(Color.WHITE);
+//        			
+//        			addCircleOuter.setStroke(Color.grayRgb(100, 0.1));
+//        			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
+//        		});
+//        		
+//        		addCircleOuter.setOnMouseExited(e -> {
+//        			
+//        			addCircle.setFill(Color.grayRgb(100, 0.1));
+//        			
+//        			addCircleOuter.setStroke(Color.grayRgb(100, 0.1));
+//        			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
+//        			
+//        		});
         		
         		// Text
         		labelCircle.setOnMouseEntered(e-> {
-        			addCircle.setFill(Color.ORANGE);
-        			addCircleOuter.setStroke(Color.grayRgb(100, 0.3));
-        			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
+        			addCircle.setFill(Color.grayRgb(100, 0.1));
+        			addCircle.setStroke(Color.grayRgb(100, 0.3));
+        			//addCircleOuter.setStroke(Color.grayRgb(100, 0.1));
+        			//addCircleOuter.setFill(Color.grayRgb(100, 0.1));
         			labelCircle.setVisible(false);
         		});
         		
         		labelCircle.setOnMouseExited(e-> {
-        			addCircle.setFill(Color.ORANGE);
-        			addCircleOuter.setStroke(Color.grayRgb(100, 0.3));
-        			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
+        			addCircle.setFill(Color.grayRgb(100, 0.1));
+        			addCircle.setStroke(Color.grayRgb(100, 0.3));
+        			//addCircleOuter.setStroke(Color.grayRgb(100, 0.1));
+        			//addCircleOuter.setFill(Color.grayRgb(100, 0.1));
         			labelCircle.setVisible(false);
         		});
         		
         		// Add to stack
         		
-        		clickables.add(addCircleOuter);
+        		//clickables.add(addCircleOuter);
         		clickables.add(addCircle);
         		clickablesText.add(labelCircle);
         		

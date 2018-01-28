@@ -274,12 +274,26 @@ public class Server implements Runnable {
 		switch (clientCMD) {
 		case NAME:
 			
-			String payloadNAME = null;
-			
 			try {
 			
 				String[] payload = inputLineSplit[1].split("\\"+getDELIMITER2());
-				payloadNAME = payload[0];
+				final String payloadNAME = payload[0];
+				
+				long duplicateNames = playMan.getListOfAllPlayers().stream()
+				.filter((player) -> {
+					return player.getName().equals(payloadNAME);
+				}).count();
+				
+				if (duplicateNames==0) {
+					playMan.addPlayer(clientId, payloadNAME);
+					outbox.add(new ToClientPacket(clientId, "CHAT","SERVER"+DELIMITER1+"Warm welcome to: " +playMan.getPlayerName(clientId) + "!"));
+					outbox.add(new ToClientPacket(clientId, "CHAT","SERVER"+DELIMITER1+"May I suggest to use: REQUESTGAME, SETTINGS, LOBBY, CHAT &&ingame: MOVE, QUIT."));
+					
+
+				} else {
+					outbox.add(new ToClientPacket(clientId, "ERROR","Name already taken try again:"+inputLineCMD));
+
+				}
 				
 			} catch (ArrayIndexOutOfBoundsException e) {
 				
@@ -289,9 +303,7 @@ public class Server implements Runnable {
 			}
 			
 			//System.out.print(" delim2[1]: "); System.out.print(delimit2[1]);
-			playMan.addPlayer(clientId, payloadNAME);
-			
-			outbox.add(new ToClientPacket(clientId, "CHAT","SERVER"+DELIMITER1+"Warm welcome to: " +playMan.getPlayerName(clientId) + "!"));
+				
 			break;
 			
 		default:
