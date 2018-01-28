@@ -140,6 +140,7 @@ public class Client {
 					
 					// Pretend as if the gui types an inputline and handle it.
 					System.out.println("■");
+					System.out.println(guiClick.getInputLine());
 					clientTUIResponder(new ClientTextInputPacket("MOVE"+DELIMITER1+guiClick.getInputLine()));
 				});
 			}

@@ -222,9 +222,6 @@ public class Server implements Runnable {
 		
 			String[] inputLineSplit = inputLineCMD.split("\\"+getDELIMITER1());
 			ClientCMDs clientCMDEnumVal = ClientCMDs.valueOf(inputLineSplit[0]);
-			
-
-			
 			// These commands only allowed if a NAME is set
 			if (null != playMan.getPlayerName(clientId)) {
 				
@@ -247,8 +244,8 @@ public class Server implements Runnable {
 			
 		} catch (NullPointerException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 			
-			outbox.add(new ToClientPacket(cRx.getClientId(), "ERROR","Not in my list of commands: NAME, MOVE, SETTINGS, QUIT, REQUESTGAME, LOBBY, CHAT."));
-			
+			outbox.add(new ToClientPacket(cRx.getClientId(), "ERROR",cRx.getInputLine()+" +Not in my list of commands: NAME, MOVE, SETTINGS, QUIT, REQUESTGAME, LOBBY, CHAT."));
+			e.printStackTrace();
 		}
 		
 		// Put all messages in queue. Will be sent out in step 4 alltogether in main.

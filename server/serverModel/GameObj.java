@@ -173,6 +173,21 @@ public class GameObj {
 		
 	}
 	
+	public Boolean getOtherPlayerPassState(int clientId) {
+		
+		Boolean passState = null; 
+		if (clientId == P2.getClientId()) {
+			
+			passState = P1PassState;
+			
+		} else if (clientId == P1.getClientId()) {
+			
+			passState = P2PassState;
+		}
+		return passState;
+		
+	}
+	
 	public void setPlayerPassState(int clientId, Boolean passState) {
 		
 		if (clientId == P1.getClientId()) {
@@ -243,7 +258,7 @@ public class GameObj {
 		
 		
 		if(clientId == this.hasTurnClientId) {
-			if(board.isMoveValid(row, col)) {
+			if(board.isMoveValid(getPlayerNumber(clientId), row, col)) {
 				
 				int rowplus1 = row + 1;
 				int colplus1 = col + 1;
@@ -282,8 +297,8 @@ public class GameObj {
 		
 		if(clientId == this.hasTurnClientId) {
 			
-			// Player did already pass once:
-			if(getPlayerPassState(clientId)) {
+			// /Other Player did already pass once:
+			if(getOtherPlayerPassState(clientId)) {
 				
 				doPassQuit = true;
 			
