@@ -77,7 +77,7 @@ public class Board {
 			
 			String numberLine = "";
 			
-			// Correction r+1
+			// Correction r+1 only for gui !!
 			int rplus1 = r + 1;
 			
 			if (r < 9) {

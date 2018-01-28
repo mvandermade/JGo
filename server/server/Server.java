@@ -32,7 +32,7 @@ public class Server implements Runnable {
 	private final PlayerManager playMan;
 	private final GameManager gameMan;
 	
-	private Queue<Socket> connQueue = new ConcurrentLinkedQueue<Socket>();
+	private final Queue<Socket> connQueue = new ConcurrentLinkedQueue<Socket>();
 	private long pollQueueTime;
 	
 	// UTF16 escape chars
@@ -247,8 +247,7 @@ public class Server implements Runnable {
 			
 		} catch (NullPointerException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 			
-			e.printStackTrace();
-			outbox.add(new ToClientPacket(cRx.getClientId(), "CMDHINT","Need a valid command..."));
+			outbox.add(new ToClientPacket(cRx.getClientId(), "ERROR","Not in my list of commands: NAME, MOVE, SETTINGS, QUIT, REQUESTGAME, LOBBY, CHAT."));
 			
 		}
 		
@@ -285,14 +284,14 @@ public class Server implements Runnable {
 			} catch (ArrayIndexOutOfBoundsException e) {
 				
 				e.printStackTrace();
-				outbox.add(new ToClientPacket(clientId, "CMDHINT","Enter name after:"+inputLineCMD));
+				outbox.add(new ToClientPacket(clientId, "ERROR","Enter name after:"+inputLineCMD));
 
 			}
 			
 			//System.out.print(" delim2[1]: "); System.out.print(delimit2[1]);
 			playMan.addPlayer(clientId, payloadNAME);
 			
-			outbox.add(new ToClientPacket(clientId, "OTHER","Welcome, " +playMan.getPlayerName(clientId) + "."));
+			outbox.add(new ToClientPacket(clientId, "CHAT","SERVER"+DELIMITER1+"Warm welcome to: " +playMan.getPlayerName(clientId) + "!"));
 			break;
 			
 		default:
@@ -323,12 +322,12 @@ public class Server implements Runnable {
 						
 					} catch (ArrayIndexOutOfBoundsException e) {
 						
-						outbox.add(new ToClientPacket(clientId, "CMDHINT","Check arg[2]:BoardSize: SETTINGS$"+inputLineSplit[1]+"$<ERROR>"));
+						outbox.add(new ToClientPacket(clientId, "ERROR","Check arg[2]:BoardSize: SETTINGS$"+inputLineSplit[1]+"$<ERROR>"));
 
 					}
 					
 				} catch (ArrayIndexOutOfBoundsException e) {
-					outbox.add(new ToClientPacket(clientId, "CMDHINT","Check arg[1]:Colour: SETTINGS$<ERROR>"));
+					outbox.add(new ToClientPacket(clientId, "ERROR","Check arg[1]:Colour: SETTINGS$<ERROR>"));
 				}
 				
 				outbox.add(new ToClientPacket(clientId, "OTHER","Your P1 Settings: Colour: "+playMan.getColourOf(clientId)+" Boardsize:" + playMan.getBoardSizeOf(clientId)));
@@ -340,16 +339,17 @@ public class Server implements Runnable {
 				if (playMan.getListOfAllOtherPlayers(clientId).size() == 0) {
 					
 					outbox.add(new ToClientPacket(clientId, "CMDHINT","REQUESTGAME$2$RANDOM"));
+					outbox.add(new ToClientPacket(clientId, "LOBBY",""));
 					
 				} else {
 					
 					String otherPlayersReply = playMan.getListOfAllOtherPlayers(clientId)
 				            .stream()
 				            .filter(playerObj -> !playerObj.getIsInGame())
-				            .map(playerObj -> "P: " + playerObj.getName()+", ")
+				            .map(playerObj -> playerObj.getName()+DELIMITER2)
 				            .collect(Collectors.joining());
 					
-					outbox.add(new ToClientPacket(clientId, "OTHER",otherPlayersReply));
+					outbox.add(new ToClientPacket(clientId, "LOBBY",otherPlayersReply));
 					
 					outbox.add(new ToClientPacket(clientId, "CMDHINT",">REQUESTGAME$2$RANDOM"));
 				}
@@ -436,7 +436,7 @@ public class Server implements Runnable {
 				} catch (NullPointerException | ArrayIndexOutOfBoundsException | NumberFormatException e) {
 					
 					e.printStackTrace();
-					outbox.add(new ToClientPacket(clientId, "CMDHINT","MOVE$row(int)_col(int)"));
+					outbox.add(new ToClientPacket(clientId, "ERROR","MOVE$row(int)_col(int)"));
 
 				}
 				
@@ -477,7 +477,7 @@ public class Server implements Runnable {
 					gameMan.processRequestQueue();
 					
 				} catch(IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
-					outbox.add(new ToClientPacket(clientId, "CMDHINT","RequestGame error"));
+					outbox.add(new ToClientPacket(clientId, "ERROR","RequestGame error"));
 				}				
 				break;
 			default:
@@ -485,7 +485,7 @@ public class Server implements Runnable {
 			}
 			
 		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
-			outbox.add(new ToClientPacket(cRx.getClientId(), "CMDHINT","RequestGame error. Try again"));
+			outbox.add(new ToClientPacket(cRx.getClientId(), "ERROR","RequestGame error. Try again"));
 		}
 
 	}

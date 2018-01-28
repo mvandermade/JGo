@@ -24,6 +24,13 @@ public class GameManager {
 		
 	}
 	
+	public void removeFromRequestQueue(int toRemoveClientId) {
+		
+		requestQueue.removeIf( toServerPacket -> {
+		      return toServerPacket.getClientId() == toRemoveClientId;//No return statement will break compilation
+		    });
+	}
+	
 	public void tryMoveFor(int clientId, int moveDataRow, int moveDataCol) {
 		
 		try {
@@ -84,8 +91,11 @@ public class GameManager {
 					.findFirst()
 					.orElse(null);
 			
-			// This query of grabbing P2 should give a result
-			errorToQuitGameObj.messageP1("ENDGAME", "QUIT cmd given by:"+playMan.getPlayerName(clientId));
+			if (null != errorToQuitGameObj) {
+				// This query of grabbing P2 should give a result
+				errorToQuitGameObj.messageP1("ENDGAME", "QUIT cmd given by:"+playMan.getPlayerName(clientId));
+				
+			}
 
 		} else {
 			
@@ -94,14 +104,20 @@ public class GameManager {
 
 		}
 		
-		final int toRemoveGameId = errorToQuitGameObj.getGameId();
-		games.removeIf( gameObj -> {
-		      return gameObj.getGameId() == toRemoveGameId;//No return statement will break compilation
-		    });
+		// Because of the search method above, if the errorToQuitGameObj stays null
+		// Conclusion: the player wasn't playing!
 		
-		// Kick both out of the inGame status
-		errorToQuitGameObj.getP1().setIsInGame(false);
-		errorToQuitGameObj.getP2().setIsInGame(false);
+		if (null != errorToQuitGameObj) {
+			final int toRemoveGameId = errorToQuitGameObj.getGameId();
+			games.removeIf( gameObj -> {
+			      return gameObj.getGameId() == toRemoveGameId;//No return statement will break compilation
+			    });
+			
+			// Kick both out of the inGame status
+			errorToQuitGameObj.getP1().setIsInGame(false);
+			errorToQuitGameObj.getP2().setIsInGame(false);
+		
+		}
 		
 	}
 	

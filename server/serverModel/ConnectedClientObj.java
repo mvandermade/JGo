@@ -37,10 +37,7 @@ public class ConnectedClientObj {
 		this.clientId = clientId;
 	}
 	
-	public void sendStrToClientSkt(String msg) {
-		
-		try {
-			
+	public void sendStrToClientSkt(String msg) throws IOException {			
 			
 			// Write line
 			bufWToServer.write(msg);
@@ -49,10 +46,6 @@ public class ConnectedClientObj {
 			// Send
 			bufWToServer.flush();
 		
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
 	}
 

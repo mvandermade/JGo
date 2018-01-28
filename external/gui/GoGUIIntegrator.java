@@ -1,5 +1,8 @@
 package gui;
 
+import java.util.List;
+
+import client.ClientTextInputPacket;
 import javafx.application.Platform;
 
 /**
@@ -21,6 +24,11 @@ public class GoGUIIntegrator implements GOGUI {
         wrappee.setMode3D(mode3D);
         wrappee.setInitialBoardSize(boardSize);
     }
+    
+    public synchronized List<ClientTextInputPacket> getGuiClickResultToArray() {
+    	
+    	return wrappee.getGuiClickResultToArray();
+    }
 
     @Override
     public synchronized void setBoardSize(int size) {
@@ -28,7 +36,10 @@ public class GoGUIIntegrator implements GOGUI {
     }
 
     @Override
-    public synchronized void addStone(int x, int y, boolean white) {
+    public synchronized void addStone(int row, int col, boolean white) {
+    	// Fixed now for RowColwise
+    	int x = col;
+    	int y = row;
         Platform.runLater(() -> {
             try {
                 wrappee.addStone(x, y, white);
@@ -89,6 +100,14 @@ public class GoGUIIntegrator implements GOGUI {
         wrappee.waitForInitializationLatch();
         System.out.println("GO GUI was successfully started!");
     }
+    
+    @Override
+    public synchronized void changeGuiTitle(String guiTitle) {
+    	// To prevent main error
+    	Platform.runLater(() -> wrappee.changeGuiTitle(guiTitle));
+    }
+    
+    
 
     @Override
     public synchronized void stopGUI() {

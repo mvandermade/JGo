@@ -2,6 +2,7 @@ package gui;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -14,12 +15,23 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Sphere;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.WindowEvent;
 
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import client.ClientTextInputPacket;
 
 
 public class GOGUIImpl extends Application {
@@ -46,6 +58,44 @@ public class GOGUIImpl extends Application {
 
     private static final CountDownLatch waitForConfigurationLatch = new CountDownLatch(1);
     private static final CountDownLatch initializationLatch = new CountDownLatch(1);
+    
+    private final Queue<ClientTextInputPacket> guiClickResult = new ConcurrentLinkedQueue<ClientTextInputPacket>();
+    
+    // Convert to sorted array
+    public List<ClientTextInputPacket> getGuiClickResultToArray() {
+    	
+		List<ClientTextInputPacket> localPolledQueue = new ArrayList<ClientTextInputPacket>();
+		Boolean done = false;
+		
+		while(!done) {
+			ClientTextInputPacket polledObject = guiClickResult.poll();
+			// null is the native response for 'no queue items left'
+			if (polledObject != null) {
+				localPolledQueue.add(polledObject);
+			} else {
+				done = true;
+			}
+		}
+		
+		// Synchronize using timestamping. So output can be done in order of array.
+		List<ClientTextInputPacket> textQueue = localPolledQueue.stream()
+				.sorted((f1, f2) -> Long.compare(f1.getStartTime(), f2.getStartTime())).
+                collect(Collectors.toList());
+    	
+    	return textQueue;
+    	
+    }
+    
+    private void addGuiClickResult(ClientTextInputPacket guiPacket) {
+    	
+    	guiClickResult.add(guiPacket);
+    }
+    
+    public void changeGuiTitle(String guiTitle) {
+    	
+    	// use instance otherwise mainThread error
+    	instance.primaryStage.setTitle(guiTitle);
+    }
 
     private static GOGUIImpl instance;
 
@@ -88,6 +138,16 @@ public class GOGUIImpl extends Application {
         this.primaryStage = primaryStage;
 
         primaryStage.setTitle("GO");
+        primaryStage.setResizable(false);
+        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+        	
+        	public void handle(WindowEvent we) {
+        		
+        		System.out.println("please close the client app instead of the gui");
+        		we.consume();
+        		
+        	}
+        });
 
         initNewBoard();
 
@@ -154,13 +214,15 @@ public class GOGUIImpl extends Application {
     private void initNewBoard() {
         root = new Group();
         board = new Node[currentBoardWidth][currentBoardHeight];
-
+        
         Scene scene = new Scene(root, (currentBoardWidth + 1) * currentSquareSize, (currentBoardHeight + 1) * currentSquareSize);
         primaryStage.setScene(scene);
         primaryStage.show();
 
         ImagePattern pattern = new ImagePattern(new Image("background_1920.jpg"));
         scene.setFill(pattern);
+        
+        // Added to see what happens
 
         initBoardLines();
     }
@@ -182,8 +244,106 @@ public class GOGUIImpl extends Application {
         for (int i = 1; i <= width; i++) {
             boardLines.add(new Line(i * squareSize, squareSize, i * squareSize, height * squareSize));
         }
-
+        
         root.getChildren().addAll(boardLines);
+        
+        List<Circle> clickables = new ArrayList<>();
+        List<Text> clickablesText = new ArrayList<>();
+        int addCircleOuterRadius = 24;
+        int addCircleRadius = 10;
+        int labelCircleRadius = addCircleOuterRadius + addCircleOuterRadius/3;
+        for (int xCoord = 1; xCoord <= height; xCoord++) {
+        	for (int yCoord = 1; yCoord <= width; yCoord++) {
+        		
+        		Circle addCircleOuter = new Circle(addCircleOuterRadius);
+        		addCircleOuter.relocate(xCoord * squareSize - addCircleOuterRadius, yCoord * squareSize - addCircleOuterRadius);
+    			addCircleOuter.setStroke(Color.grayRgb(100, 0.3));
+    			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
+        		
+        		Circle addCircle = new Circle(addCircleRadius);
+        		addCircle.setStroke(Color.BLUE);
+        		addCircle.setFill(Color.ORANGE);
+        		addCircle.relocate(xCoord * squareSize - addCircleRadius, yCoord * squareSize - addCircleRadius);
+        		
+        		Text labelCircle = new Text();
+        		labelCircle.setFont(new Font(20));
+        		labelCircle.setWrappingWidth(200);
+        		labelCircle.setTextAlignment(TextAlignment.JUSTIFY);
+        		// BEWARE!! x y coordinates are cols - rows.!!!
+        		labelCircle.setVisible(false);
+        		
+        		labelCircle.setText(""+yCoord+"_"+xCoord);
+        		labelCircle.relocate(xCoord * squareSize - labelCircleRadius, yCoord * squareSize - labelCircleRadius);
+        		
+        		
+        		
+        		// Inner blob
+        		
+        		addCircle.setOnMouseClicked(e -> {
+        		    addGuiClickResult(new ClientTextInputPacket(labelCircle.getText()));
+        		    
+        		});
+        		
+        		addCircle.setOnMouseEntered(e-> {
+        			addCircle.setFill(Color.BLACK);
+        			addCircleOuter.setStroke(Color.grayRgb(100, 0.8));
+        			addCircleOuter.setFill(Color.grayRgb(100, 0.5));
+        			labelCircle.setVisible(true);
+        		});
+        		
+        		addCircle.setOnMouseExited(e-> {
+        			addCircle.setFill(Color.ORANGE);
+        			addCircleOuter.setStroke(Color.grayRgb(100, 0.3));
+        			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
+        			labelCircle.setVisible(false);
+        		});
+        		
+        		// Outer blob
+        		addCircleOuter.setOnMouseEntered(e -> {
+        			
+        			addCircle.setFill(Color.WHITE);
+        			addCircleOuter.setStroke(Color.grayRgb(100, 0.8));
+        			addCircleOuter.setFill(Color.grayRgb(100, 0.5));
+        		});
+        		
+        		addCircleOuter.setOnMouseExited(e -> {
+        			
+        			addCircle.setFill(Color.ORANGE);
+        			addCircleOuter.setStroke(Color.grayRgb(100, 0.3));
+        			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
+        			
+        		});
+        		
+        		// Text
+        		labelCircle.setOnMouseEntered(e-> {
+        			addCircle.setFill(Color.ORANGE);
+        			addCircleOuter.setStroke(Color.grayRgb(100, 0.3));
+        			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
+        			labelCircle.setVisible(false);
+        		});
+        		
+        		labelCircle.setOnMouseExited(e-> {
+        			addCircle.setFill(Color.ORANGE);
+        			addCircleOuter.setStroke(Color.grayRgb(100, 0.3));
+        			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
+        			labelCircle.setVisible(false);
+        		});
+        		
+        		// Add to stack
+        		
+        		clickables.add(addCircleOuter);
+        		clickables.add(addCircle);
+        		clickablesText.add(labelCircle);
+        		
+        	}
+        	
+        }
+        
+        
+        root.getChildren().addAll(clickables);
+        root.getChildren().addAll(clickablesText);
+        
+        
 
         if (mode3D){
             hint = new Sphere(currentSquareSize / 2);

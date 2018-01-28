@@ -16,8 +16,8 @@ public class ConnectionManager {
 	private Integer clientId = 0;
 	
 	// These objects can be sent by any client to the server
-	final Queue<ToServerPacket> toServerQueue = new ConcurrentLinkedQueue<ToServerPacket>();
-	final Queue<ToClientPacket> toClientTxQueue = new ConcurrentLinkedQueue<ToClientPacket>();
+	private final Queue<ToServerPacket> toServerQueue = new ConcurrentLinkedQueue<ToServerPacket>();
+	private final Queue<ToClientPacket> toClientTxQueue = new ConcurrentLinkedQueue<ToClientPacket>();
 	private GameManager gameMan;
 	private PlayerManager playMan;
 
@@ -80,13 +80,19 @@ public class ConnectionManager {
 	public void removeClientById(int findThisId) {
 		
 		// here should be a internal tag for the server. (ERR or something)
+		gameMan.errorQuit2PGameFor(findThisId);
 		System.out.println("Quit: Broken connection"+findThisId);
 		clients.removeIf( i -> {
 		      return i.getClientId() == findThisId;//No return statement will break compilation
 		    });
 		
-		gameMan.errorQuit2PGameFor(findThisId);
+		// Flush the user from a queue (if present)
+		gameMan.removeFromRequestQueue(findThisId);
+		
+		// Kick out of the player manager
 		playMan.removePlayer(findThisId);
+		
+		// <garbage collection done>
 		
 		
 	}
@@ -105,7 +111,14 @@ public class ConnectionManager {
 	public void transmitToClient(int clientId, String msg) {
 		
 		//ConnectedClientObj
-		getClientById(clientId).ifPresent(connectedClientObj -> connectedClientObj.sendStrToClientSkt(msg));
+		getClientById(clientId).ifPresent(connectedClientObj -> {
+			try {
+				connectedClientObj.sendStrToClientSkt(msg);
+			} catch (IOException e) {
+				// Break connection with client, and remove cleanly from any queue
+				removeClientById(clientId);
+			}
+		});
 		
 		// Transmission starting
 	}

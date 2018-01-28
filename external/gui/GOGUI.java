@@ -70,4 +70,6 @@ public interface GOGUI {
      */
     void stopGUI();
 
+	void changeGuiTitle(String title);
+
 }
