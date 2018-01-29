@@ -21,7 +21,7 @@ public interface GOGUI {
      * @param white if true then a white stone will be added, otherwise a black stone will be added
      * @throws InvalidCoordinateException when x or y coordinate fall outside of the board.
      */
-    void addStone(int x, int y, boolean white) throws InvalidCoordinateException;
+    void addStoneRC(int row, int col, boolean white) throws InvalidCoordinateException;
 
     /**
      * Removes any existing stone at the given position.
@@ -71,5 +71,9 @@ public interface GOGUI {
     void stopGUI();
 
 	void changeGuiTitle(String title);
+
+	void addStone(int x, int y, boolean white);
+
+	void removeStoneRC(int row, int col);
 
 }

@@ -73,7 +73,7 @@ public class Server implements Runnable {
 		System.out.println("OK");
 		
 		// Setting
-		pollQueueTime = 200;
+		pollQueueTime = 100;
 		
 		// PlayerStorage
 		

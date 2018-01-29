@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import board.Board;
+import board.BoardKoRuleViolated;
+import board.Stone;
 import gui.GoGUIIntegrator;
 
 public class Client {
@@ -35,7 +37,7 @@ public class Client {
 	// Used to control the GUI and Board
 	private Boolean inGame = false; 
 	private Board board;
-	private String gameStartColour = null;
+	private String startColourP1 = null;
 	
 	private GoGUIIntegrator gogui = null;
 	
@@ -50,6 +52,10 @@ public class Client {
 	// For determining the colors
 	private int playerNoSelf = 0;
 	private int playerNoOther = 0;
+	private int playerNoSelfScore = 0;
+	private int playerNoOtherScore = 0;
+
+	private String startColourPlayer;
 	
 
 	public Client(String servername, int port) {
@@ -76,8 +82,8 @@ public class Client {
 		
 		
 		
-		// 500ms mainloop delay
-		this.pollQueueTime = 500;
+		// 200ms mainloop delay
+		this.pollQueueTime = 200;
 		
 		try {
 			skt = new Socket(servername, port);
@@ -286,7 +292,7 @@ public class Client {
 				// You can change this anytime, Before or after invoking RequestGame.
 				// Settings will be leading only if P1 position.
 				try {
-					String startColourP1 = inputLineSplit[1];
+					startColourP1 = inputLineSplit[1];
 					try {
 						//inputLineSplit[2];
 						int boardSize = Integer.parseInt(inputLineSplit[2]);
@@ -324,6 +330,7 @@ public class Client {
 					// You can change this anytime, Before or after invoking RequestGame.
 					// Settings will be leading only if P1 position.
 					
+					
 					try {
 						
 						// Determine the playerNo
@@ -335,7 +342,9 @@ public class Client {
 								playerNoSelf = 1;
 								playerNoOther = 2;
 								
-								gogui.changeGuiTitle("TURN "+playerName);
+								this.startColourPlayer = startColourP1;
+								
+								gogui.changeGuiTitle("TURN "+playerName+" "+startColourPlayer);
 								
 							} else {
 								
@@ -343,7 +352,9 @@ public class Client {
 								playerNoSelf = 2;
 								playerNoOther = 1;
 								
-								gogui.changeGuiTitle(playerName);
+								this.startColourPlayer = "WHITE";
+								
+								gogui.changeGuiTitle(playerName+" "+startColourPlayer);
 								
 							}
 							
@@ -357,15 +368,17 @@ public class Client {
 								
 								System.out.println("Opponent passed");
 								
-								gogui.changeGuiTitle("TURN "+playerName);
+								gogui.changeGuiTitle("TURN "+playerName + " "+startColourPlayer);
 								
 							} else {
 								
-								gogui.changeGuiTitle(playerName);
+								gogui.changeGuiTitle(playerName+ " "+startColourPlayer);
 								
 							}
 							
 						} else {
+							
+
 							
 							String takeNext = inputLineSplit[1];
 							String move = inputLineSplit[2];
@@ -378,23 +391,10 @@ public class Client {
 							int row = Integer.parseInt(rowstr) -1;
 							
 							try {
+								
 								//inputLineSplit[2];
 								String colstr = moveSplit[1];
 								int col = Integer.parseInt(colstr) -1;
-								
-								// Inform user of turn by server
-								
-								if(takeNext.equals(playerName)) {
-									
-									System.out.println("Hey, "+playerName+"(P"+playerNoSelf+") it's your turn!");
-									gogui.changeGuiTitle("TURN "+playerName);
-									
-								} else {
-									
-									System.out.println("Turn of: "+takeNext);
-									gogui.changeGuiTitle(playerName);
-									
-								}
 								
 								// Track move
 								
@@ -407,6 +407,34 @@ public class Client {
 									trackServerMove(playerNoOther, row, col);
 									
 								}
+								
+								if(playerNoSelf == 1) {
+									playerNoSelfScore = board.getScoreP1();
+									playerNoOtherScore = board.getScoreP2();
+								} else if (playerNoSelf == 2) {
+									playerNoSelfScore = board.getScoreP2();
+									playerNoOtherScore = board.getScoreP1();
+								}
+								
+
+								
+								// Inform user of turn by server
+								
+								if(takeNext.equals(playerName)) {
+									
+									System.out.println("Hey, "+playerName+"(P"+playerNoSelf+") it's your turn!"+" Your score: "+playerNoSelfScore+" Opponent: "+playerNoOtherScore);
+									
+									
+									gogui.changeGuiTitle("TURN "+playerName+" "+startColourPlayer+" Your score: "+playerNoSelfScore+" Opponent: "+playerNoOtherScore);
+									
+								} else {
+									
+									System.out.println("Turn of: "+takeNext);
+									gogui.changeGuiTitle(playerName+" "+startColourPlayer+" Your score: "+playerNoSelfScore+" Opponent: "+playerNoOtherScore);
+									
+								}
+								
+
 								
 								
 								
@@ -442,22 +470,41 @@ public class Client {
 	}
 	
 	private void trackServerMove(int moveForPlayerNo, int row, int col) {
-		// TODO Auto-generated method stub
-		board.putStoneForPlayer(moveForPlayerNo, row, col);
 		
-		// false = 1, true = 2
-		if (moveForPlayerNo == 1) {
-			gogui.addStone(row, col, false);
-		} else if (moveForPlayerNo == 2) {
-			gogui.addStone(row, col, true);
+		if(board.isMoveValid(moveForPlayerNo, row, col)) {
+			
+			try {
+				// TODO Auto-generated method stub
+				List<Stone> toRemoveStonesGui=board.putStoneForPlayer(moveForPlayerNo, row, col);
+				// false = 1, true = 2
+				if (moveForPlayerNo == 1) {
+					gogui.addStoneRC(row, col, false);
+				} else if (moveForPlayerNo == 2) {
+					gogui.addStoneRC(row, col, true);
+				}
+				
+				toRemoveStonesGui.forEach((stone)-> {
+					gogui.removeStoneRC(stone.getRow(), stone.getCol());
+				});
+				
+			} catch (BoardKoRuleViolated e) {
+				
+				System.out.println("Ko rule violation ! Try again.");
+			}
+
+
+			
 		}
+		
 		
 	}
 
 	private void setGameStateTrue(String startColourP1, int boardSize) {
 		// TODO Auto-generated method stub		
 		inGame = true;
-		gameStartColour = startColourP1;
+		
+		this.startColourP1 = startColourP1;
+		
 		// Internal tracking
 		board = new board.Board(boardSize);
 		

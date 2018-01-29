@@ -36,7 +36,19 @@ public class GoGUIIntegrator implements GOGUI {
     }
 
     @Override
-    public synchronized void addStone(int row, int col, boolean white) {
+    public synchronized void addStone(int x, int y, boolean white) {
+    	// Fixed now for RowColwise
+        Platform.runLater(() -> {
+            try {
+                wrappee.addStone(x, y, white);
+            }
+            catch (InvalidCoordinateException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+    
+    public synchronized void addStoneRC(int row, int col, boolean white) {
     	// Fixed now for RowColwise
     	int x = col;
     	int y = row;
@@ -52,6 +64,20 @@ public class GoGUIIntegrator implements GOGUI {
 
     @Override
     public synchronized void removeStone(int x, int y) {
+        Platform.runLater(() -> {
+            try {
+                wrappee.removeStone(x, y);
+            }
+            catch (InvalidCoordinateException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+    
+    @Override
+    public synchronized void removeStoneRC(int row, int col) {
+    	int x = col;
+    	int y = row;
         Platform.runLater(() -> {
             try {
                 wrappee.removeStone(x, y);

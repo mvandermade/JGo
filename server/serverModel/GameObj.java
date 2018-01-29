@@ -2,6 +2,8 @@ package serverModel;
 
 import java.util.List;
 
+import board.BoardKoRuleViolated;
+
 public class GameObj {
 	
 	private int gameId;
@@ -263,18 +265,25 @@ public class GameObj {
 				int rowplus1 = row + 1;
 				int colplus1 = col + 1;
 				
-				board.putStoneForPlayer(getPlayerNumber(clientId), row, col);
-				
-				// Answer to client $TURN$nextPlayerName$row_col$currentPlayerName
-				messageBoth("INFO", "\n" + board.toStringClient());
-				
-				messageBoth("TURN", getNextPlayerNameOf(this.hasTurnClientId)+D1+rowplus1+D2+colplus1+D1+getPlayerNameOf(this.hasTurnClientId));
-				
-				// Reset pass
-				setPlayerPassState(clientId, false);
-				
-				// Switch turn (depending on implementation)
-				this.hasTurnClientId = getNextPlayerClientIdOf(this.hasTurnClientId);
+				try {
+					board.putStoneForPlayer(getPlayerNumber(clientId), row, col);
+					System.out.println("P1 Score:"+board.getScoreP1());
+					System.out.println("P2 Score:"+board.getScoreP2());
+					
+					// Answer to client $TURN$nextPlayerName$row_col$currentPlayerName
+					messageBoth("INFO", "\n" + board.toStringClient());
+					
+					messageBoth("TURN", getNextPlayerNameOf(this.hasTurnClientId)+D1+rowplus1+D2+colplus1+D1+getPlayerNameOf(this.hasTurnClientId));
+					
+					// Reset pass
+					setPlayerPassState(clientId, false);
+					
+					// Switch turn (depending on implementation)
+					this.hasTurnClientId = getNextPlayerClientIdOf(this.hasTurnClientId);
+				} catch (BoardKoRuleViolated e) {
+					messageClientId(clientId, "ERROR", "Ko rule violation!");
+					
+				}
 				
 				
 			} else {

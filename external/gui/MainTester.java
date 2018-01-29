@@ -12,12 +12,12 @@ public class MainTester {
         gogui.startGUI();
         gogui.setBoardSize(9);
 
-        gogui.addStone(0, 0, false);
-        gogui.addStone(0, 2, true);
-        gogui.addStone(0, 3, false);
-        gogui.addStone(1, 1, true);
-        gogui.addStone(1, 2, true);
-        gogui.addStone(1, 3, false);
+        gogui.addStoneRC(0, 0, false);
+        gogui.addStoneRC(0, 2, true);
+        gogui.addStoneRC(0, 3, false);
+        gogui.addStoneRC(1, 1, true);
+        gogui.addStoneRC(1, 2, true);
+        gogui.addStoneRC(1, 3, false);
 //        gogui.addStone(2, 0, true);
 //        gogui.addStone(2, 1, true);
 //        gogui.addStone(2, 2, false);
