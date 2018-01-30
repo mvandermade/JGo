@@ -54,8 +54,9 @@ public class Chain {
 		for(int i=0; i<boardSize+2; i++){
 			paddedBoard[0][i] = 3;
 			paddedBoard[i][0] = 3;
-			paddedBoard[boardSize][i] = 3;
-			paddedBoard[i][boardSize] = 3;
+			// BoardSize, note arrays start at 0 !! so not +2. +1 is outer ring of boardSize+2
+			paddedBoard[boardSize+1][i] = 3;
+			paddedBoard[i][boardSize+1] = 3;
 		}
 		
 		for(int r=0; r<boardSize; r++) {
