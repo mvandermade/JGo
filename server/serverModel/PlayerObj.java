@@ -9,7 +9,6 @@ public class PlayerObj {
 	private Boolean isInGame;
 
 	public PlayerObj(int clientId, String name) {
-		// TODO Auto-generated constructor stub
 		// TCP id, Name
 		this.clientId = clientId;
 		this.setName(name);

@@ -33,7 +33,6 @@ public class ToClientPacket {
 	}
 
 	private void setClientId(int clientId) {
-		// TODO Auto-generated method stub
 		this.clientId = clientId;
 	}
 

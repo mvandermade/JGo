@@ -1,10 +1,12 @@
 package main;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class StartServer {
 
-	static int port = 5647;
+	static String serverPort = "5647";
 	
     /**
      * The server is booted to a thread using the runnable class for this file
@@ -17,20 +19,35 @@ public class StartServer {
      *
      */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		try {
-			
-			Runnable r = new server.Server(port);
-			
-			Thread t = new Thread(r);
-			t.start();
-			
-		} catch (IOException e) {
-			
-			System.out.println("Server stopped unexpected...:");
-			e.printStackTrace();
-			System.out.println("REBOOT MANUALLY...:");
-			
+		while (true) {
+			try {
+				System.out.println("Please enter a port to listen on (none-> 5647)");
+				
+				try {
+					serverPort = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+				} catch (IOException e) {
+					System.out.println("-> Autofill: 5647");
+					serverPort = "5647";
+					
+				}
+				
+				if (serverPort.equals("")) {
+					System.out.println("-> Autofill: 5647");
+					serverPort = "5647";
+				}
+				
+				Runnable r = new server.Server(Integer.parseInt(serverPort));
+				
+				Thread t = new Thread(r);
+				t.start();
+				t.join();
+				
+			} catch (IOException | NumberFormatException | InterruptedException e) {
+				
+				System.out.println("Server stopped unexpected... maybe try a different port ?");
+				System.out.println("REBOOT...:");
+				
+			}
 		}
 		
 		

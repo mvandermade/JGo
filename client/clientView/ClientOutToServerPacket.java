@@ -18,7 +18,6 @@ public class ClientOutToServerPacket {
 		this.setStartTime(System.nanoTime());
 		this.inputLine = inputLine;
 		
-		// TODO Auto-generated constructor stub
 	}
 	
 	public long getStartTime() {
@@ -30,7 +29,6 @@ public class ClientOutToServerPacket {
 	}
 
 	public String getInputLine() {
-		// TODO Auto-generated method stub
 		return this.inputLine;
 	}
 

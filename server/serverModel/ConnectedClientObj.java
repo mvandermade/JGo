@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 
 public class ConnectedClientObj {
 	
@@ -29,8 +28,7 @@ public class ConnectedClientObj {
 		try {
 			bufWToServer = new BufferedWriter(new OutputStreamWriter(skt.getOutputStream()));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	

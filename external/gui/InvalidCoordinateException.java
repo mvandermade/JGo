@@ -5,7 +5,12 @@ package gui;
  */
 public class InvalidCoordinateException extends Exception {
 
-    public InvalidCoordinateException(String message) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public InvalidCoordinateException(String message) {
         super(message);
     }
 }

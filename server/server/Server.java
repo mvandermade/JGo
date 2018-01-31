@@ -97,8 +97,7 @@ public class Server implements Runnable {
 			try {
 				Thread.sleep(pollQueueTime);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 			
 			// 1. see if ClientAcceptor() has produced any new entries.
@@ -109,8 +108,7 @@ public class Server implements Runnable {
 					connMan.addNewClient(nextConnInLine);
 					
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//e.printStackTrace();
 				}
 			}
 			
@@ -138,8 +136,7 @@ public class Server implements Runnable {
 				connQueue.add(serverSocket.accept());
 				
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// do nothing
 			}
 		}
 	}
@@ -332,13 +329,16 @@ public class Server implements Runnable {
 								+ playMan.getPlayerName(clientId) + "!")
 						);
 						
-						connMan.getToServerQueue().add(new ToServerPacket(clientId,
-								"Autotyper: Hello! I am " 
+						connMan.getToServerQueue().add(new ToServerPacket(
+								clientId,
+								"CHAT" + DELIMITER1 + "playMan.getPlayerName(clientId)" + DELIMITER1
+								+ "Autotyper: Hello! I am " 
 								+ playMan.getPlayerName(clientId)
-								+ "just joined you in the server."));
+								+ " just joined you in the server."));
 						outbox.add(new ToClientPacket(
 								clientId,
-								"CHAT", "SERVER" + DELIMITER1 
+								"CHAT",
+								"SERVER" 
 								+ "May I suggest to use: REQUESTGAME, SETTINGS, LOBBY, CHAT"
 								+ " &&ingame: MOVE, QUIT."));
 						
@@ -385,7 +385,6 @@ public class Server implements Runnable {
 	 */
 	private void playerGeneralServlet(ToServerPacket toServerPacket, List<ToClientPacket> outbox,
 			ClientCMDs clientCMD, String[] inputLineSplit) {
-		// TODO Auto-generated method stub
 		int clientId = toServerPacket.getClientId();
 		
 		
@@ -483,7 +482,6 @@ public class Server implements Runnable {
 					}
 					break;
 				default:
-					// TODO: say something, but not double the error
 					break;
 			}
 			
@@ -587,7 +585,6 @@ public class Server implements Runnable {
 					gameMan.quit2PGameFor(clientId);
 					break;
 				default:
-					// TODO: say something, but not double the error
 					break;
 			}
 			
@@ -622,7 +619,6 @@ public class Server implements Runnable {
 			List<ToClientPacket> outbox,
 			ClientCMDs clientCMD,
 			String[] inputLineSplit) {
-		// TODO Auto-generated method stub
 		try {
 			int clientId = toServerPacket.getClientId();
 			

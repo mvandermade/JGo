@@ -29,7 +29,6 @@ public class ToServerPacket {
 	}
 
 	private void setClientId(int clientId) {
-		// TODO Auto-generated method stub
 		this.clientId = clientId;
 	}
 
@@ -54,7 +53,7 @@ public class ToServerPacket {
 	}
 	
 	public String stringify() {
-		return this.clientId +") SAYS: " + this.inputLine + " AT:" + this.startTime;
+		return this.clientId + ") SAYS: " + this.inputLine + " AT:" + this.startTime;
 	}
 
 }

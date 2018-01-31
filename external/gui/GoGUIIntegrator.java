@@ -14,8 +14,10 @@ public class GoGUIIntegrator implements GOGUI {
 
     /**
      * Creates a GoGUIIntegrator that is capable of configuring and controlling the GO GUI.
-     * @param showStartupAnimation if true then a startup animation will be shown when the GO GUI is started.
-     * @param mode3D if true then the stones will be shown in 3D. Otherwise a 2D representation will be used.
+     * @param showStartupAnimation if true then a startup animation will be shown
+     *  when the GO GUI is started.
+     * @param mode3D if true then the stones will be shown in 3D.
+     *  Otherwise a 2D representation will be used.
      * @param boardSize the desired initial board size.
      */
     public GoGUIIntegrator(boolean showStartupAnimation, boolean mode3D, int boardSize) {
@@ -41,8 +43,7 @@ public class GoGUIIntegrator implements GOGUI {
         Platform.runLater(() -> {
             try {
                 wrappee.addStone(x, y, white);
-            }
-            catch (InvalidCoordinateException e) {
+            } catch (InvalidCoordinateException e) {
                 e.printStackTrace();
             }
         });
@@ -55,8 +56,7 @@ public class GoGUIIntegrator implements GOGUI {
         Platform.runLater(() -> {
             try {
                 wrappee.addStone(x, y, white);
-            }
-            catch (InvalidCoordinateException e) {
+            } catch (InvalidCoordinateException e) {
                 e.printStackTrace();
             }
         });
@@ -67,8 +67,7 @@ public class GoGUIIntegrator implements GOGUI {
         Platform.runLater(() -> {
             try {
                 wrappee.removeStone(x, y);
-            }
-            catch (InvalidCoordinateException e) {
+            } catch (InvalidCoordinateException e) {
                 e.printStackTrace();
             }
         });
@@ -81,8 +80,7 @@ public class GoGUIIntegrator implements GOGUI {
         Platform.runLater(() -> {
             try {
                 wrappee.removeStone(x, y);
-            }
-            catch (InvalidCoordinateException e) {
+            } catch (InvalidCoordinateException e) {
                 e.printStackTrace();
             }
         });
@@ -147,8 +145,7 @@ public class GoGUIIntegrator implements GOGUI {
             while (!GOGUIImpl.isInstanceAvailable()) {
                 try {
                     Thread.sleep(20);
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }

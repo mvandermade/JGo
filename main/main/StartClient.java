@@ -1,5 +1,6 @@
 package main;
 
+
 import client.Client;
 
 public class StartClient {
@@ -20,8 +21,13 @@ public class StartClient {
 		// Defaults
 //		int port = 5647;
 //		String hostname = "localhost";
+		while (true) {
+			
+			new Client();
+			
+			System.out.println("Rebooting client");
 		
-		new Client();
+		}
 	}
 
 }

@@ -83,8 +83,13 @@ public class Client {
      * 
      */
 	public Client() {
-		// TODO Auto-generated constructor stub
-		
+		System.out.println("May I suggest to use: REQUESTGAME, SETTINGS, LOBBY, CHAT"
+				+ " &&ingame: MOVE, QUIT.");
+		System.out.println("DELIMITERS: COMMAND<DELIMITER1>PAYLOAD");
+		System.out.println("PAYLOAD IS DELIMITED USING <DELIMITER2>");
+		System.out.println("EXAMPLE: MOVE" + delimiter1 + "1" + delimiter2 + "2");
+		System.out.println("SEE NU3.0 v5.0 protocol for details.");
+		System.out.println("type HELP for info");
 		System.out.println("Hi! Please state your player name:");
 		
 		// Poll for the name of the player
@@ -92,54 +97,65 @@ public class Client {
 			try {
 				playerName = (new BufferedReader(new InputStreamReader(System.in))).readLine();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				System.out.println("Need a name to continue");
 				e.printStackTrace();
 			}
 			
 		}
+		
+		
 		System.out.println("Client: got:, " 
 				+ playerName
-				+ " as input, please enter the IP or Hostname of a server:");
+				+ " as input, please enter the IP or Hostname of a server: (none = localhost)");
 		
-		while (null == serverHostname) {
-			try {
-				serverHostname = (new BufferedReader(new InputStreamReader(System.in))).readLine();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				System.out.println("Need a hostname to continue");
-				e.printStackTrace();
-			}
-			
+		try {
+			serverHostname = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+		} catch (IOException e) {
+			System.out.println("--> Autofill: localhost");
+			serverHostname = "localhost";
+		}
+		
+		if (serverHostname.equals("")) {
+			System.out.println("-> Autofill: localhost");
+			serverHostname = "localhost";
 		}
 		
 		System.out.println("Client: got:, " 
 				+ serverHostname
-				+ " as input, please enter the port (default NU3.0: 5647):");
+				+ " as input, please enter the port (enter = default NU3.0: 5647):");
 		
-		while (null == serverPort) {
-			try {
-				serverPort = (new BufferedReader(new InputStreamReader(System.in))).readLine();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				System.out.println("Need a hostname to continue");
-				e.printStackTrace();
-			}
+		try {
+			serverPort = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+		} catch (IOException e) {
+			System.out.println("-> Autofill: 5647");
+			serverPort = "5647";
 			
 		}
 		
+		if (serverPort.equals("")) {
+			System.out.println("-> Autofill: 5647");
+			serverPort = "5647";
+		}
 		
-		clientOutToServerQueue.add(new ClientOutToServerPacket("NAME"
+		// Default hello message for nedap university 3.0 protocol v5
+		clientOutToServerQueue.add(new ClientOutToServerPacket(
+				"NAME"
 				+ delimiter1 
-				+ playerName));
+				+ playerName
+				+ delimiter1
+				+ "VERSION"
+				+ delimiter1
+				+ "5"
+				+ delimiter1
+				+ "EXTENSIONS"
+				+ delimiter1
+				+ "0" + delimiter1 + "0" + delimiter1 + "0" + delimiter1 + "0" + delimiter1
+				+ "0" + delimiter1 + "0" + delimiter1 + "0" + delimiter1
+				));
 		
-		clientOutToServerQueue.add(new ClientOutToServerPacket("REQUESTGAME"));
-		// Repeate the playerName bufferedreader concept for IP and port (parseToInt)
 		
-		
-		
-		// 200ms mainloop delay
-		this.pollQueueTime = 50;
+		// 20ms mainloop delay
+		this.pollQueueTime = 20;
 		
 		try {
 			skt = new Socket(serverHostname, Integer.parseInt(serverPort));
@@ -149,10 +165,8 @@ public class Client {
 							)
 					);
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -163,7 +177,7 @@ public class Client {
 		(new Thread() {
 			public void run() {
 			// do something 
-				HandleClientInbox();
+				handleClientInbox();
 			}
 		}).start(); // Boot the thread
 		
@@ -171,7 +185,7 @@ public class Client {
 		(new Thread() {
 			public void run() {
 			// do something 
-				HandleTUI(new BufferedReader(new InputStreamReader(System.in)));
+				handleTUI(new BufferedReader(new InputStreamReader(System.in)));
 			}
 		}).start(); // Boot the thread
 		
@@ -182,20 +196,26 @@ public class Client {
 	}
 	
     /**
-     * In stages this loop will continously poll
+     * In stages this loop will continously poll from again the network socket
+     * connected to the server, as well as the System.in reader.
+     * The GUI also puts event on this polling loop.
+     * 
+     * After polling a package with a command for the client the commands
+     * are parsed in order of creating via sorting.
+     * 
+     * Then any responses created during one loop iteration are sent 
+     * back to the server.
      * 
      * @param	
      * @return	void
      */
 	
 	private void runClientLoop() {
-		// TODO Auto-generated method stub
 		while (true) {
 			try {
 				Thread.sleep(pollQueueTime);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// ignore
 			}
 			
 			// 1. Since the 1 'inbox' thread is running asynchrone, the poll method is used.
@@ -221,18 +241,25 @@ public class Client {
 			}
 			
 			//4. Packets are sent out async.
-			FlushClientOutbox();
+			flushClientOutbox();
 			
 		} // end while true client loop
 		
 	}
 
+    /**
+     * The network inbox here is pulled towards the main thread from the
+     * socket handing object.
+     * The queue is polled, sorted and stored to the main thread variables.
+     * 
+     * @param	
+     * @return	void
+     */
 	private void clientPullAndProcessInbox() {
-		// TODO Auto-generated method stub
 		List<ServerInToClientPacket> localPolledQueue = new ArrayList<ServerInToClientPacket>();
 		Boolean done = false;
 		
-		while(!done) {
+		while (!done) {
 			ServerInToClientPacket polledObject = serverInToClientQueue.poll();
 			// null is the native response for 'no queue items left'
 			if (polledObject != null) {
@@ -248,7 +275,7 @@ public class Client {
                 collect(Collectors.toList());
 		
 		// Pass all to clientResponderServlet
-		servletQueue.forEach((c)->{
+		servletQueue.forEach((c) -> {
 			//System.out.println("GOT TCP+++++++"); 
 			clientResponderServlet(c); 
 			//System.out.println("END TCP-------");
@@ -258,12 +285,11 @@ public class Client {
 	}
 	
 	private void clientPullAndProcessTUI() {
-		// TODO Auto-generated method stub
 		// Queue<ClientTextInputPacket> clientTextInputPacket
 		List<ClientTextInputPacket> localPolledQueue = new ArrayList<ClientTextInputPacket>();
 		Boolean done = false;
 		
-		while(!done) {
+		while (!done) {
 			ClientTextInputPacket polledObject = clientTextInputQueue.poll();
 			// null is the native response for 'no queue items left'
 			if (polledObject != null) {
@@ -279,7 +305,7 @@ public class Client {
                 collect(Collectors.toList());
 		
 		// Pass all to clientResponderServlet
-		textQueue.forEach((c)->{
+		textQueue.forEach((c) -> {
 			//System.out.println("GOT TEXT..."); 
 			//System.out.println(c.getInputLine());
 			clientTUIResponder(c); 
@@ -289,15 +315,28 @@ public class Client {
 		
 	}
 	
+
+    /**
+     * Enum used to decode server message commands.
+     * In this case they are split up in an enum allowed always:
+     * and one only allowed during a game
+     */
+	
 	// These commands can be sent out to the server
 	
 	private enum ServerCMDs {
 		
 		START,
 		CHAT,
-		LOBBY
+		LOBBY,
+		HELP
 	}
 	
+    /**
+     * Enum used to decode server message commands.
+     * In this case they are split up in an enum allowed always:
+     * and one only allowed during a game
+     */
 	// These commands can be sent out to the server only ingame
 	
 	private enum ServerCMDsInGame {
@@ -309,9 +348,17 @@ public class Client {
 		
 	}
 	
+    /**
+     * The clientresponder servlet takes care of all logics that need to.
+     * occur to purposefully respond to server messages.
+     * 
+     * The servlet can also interact with the external package GoGui if desired.
+     * 
+     * The ingame state of the user is stored in the main object field, as well
+     * as the desired settings for a game.
+     */
 
-	private void clientResponderServlet(ServerInToClientPacket cRx) {
-		// TODO Auto-generated method stub
+	private void clientResponderServlet(ServerInToClientPacket toClientPacket) {
 		
 		// Intelligence happens here
 		// Talk back to Command line or GUI
@@ -320,11 +367,9 @@ public class Client {
 		// Reads are redone after a ParseInt.
 		
 		// This part can only be accessed if ClientPlayerName exists
-		String inputLineCMD = cRx.getInputLine();
-		
-		/////
+		String inputLineCMD = toClientPacket.getInputLine();
 	
-		String[] checkInputIsClientCompliant = inputLineCMD.split("\\"+delimiter1);
+		String[] checkInputIsClientCompliant = inputLineCMD.split("\\" + delimiter1);
 		
 		
 		Boolean printServerDebug = false;
@@ -345,186 +390,196 @@ public class Client {
 			
 		}
 		
-		if(printServerDebug) {
+		if (printServerDebug) {
 			
-			System.out.println("Server(filtered) said: "+inputLineCMD);
+			System.out.println("Server(filtered) said: " + inputLineCMD);
 			printServerDebug = false;
 		}
 		
 		try {
-			String[] inputLineSplit = inputLineCMD.split("\\"+delimiter1);
+			String[] inputLineSplit = inputLineCMD.split("\\" + delimiter1);
 			
 			ServerCMDs clientCMDEnumVal = ServerCMDs.valueOf(inputLineSplit[0]);
 			
 			switch (clientCMDEnumVal) {
-			case START:
-				// You can change this anytime, Before or after invoking RequestGame.
-				// Settings will be leading only if P1 position.
-				try {
-					startColourP1 = inputLineSplit[1];
-					try {
-						//inputLineSplit[2];
-						int boardSize = Integer.parseInt(inputLineSplit[2]);
-						setGameStateTrue(startColourP1, boardSize);			
-					} catch (ArrayIndexOutOfBoundsException e) {
-						System.out.println("Could not read boardSize...");
-						
-					}
-					
-				} catch (ArrayIndexOutOfBoundsException e) {
-					
-					System.out.println("Could not read startColour...");
-				}
-				
-
-				break;
-			default:
-				break;
-			} // endof switch clientCMD
-			
-		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
-			
-			// Dont report it is printed anyway.
-			
-		}
-		
-		try {
-			// 
-			String[] inputLineSplit = inputLineCMD.split("\\"+delimiter1);
-			if (true == inGame) {
-				ServerCMDsInGame clientTurnCMDEnumVal = ServerCMDsInGame.valueOf(inputLineSplit[0]);
-				
-				switch (clientTurnCMDEnumVal) {
-				case TURN:
+				case START:
 					// You can change this anytime, Before or after invoking RequestGame.
 					// Settings will be leading only if P1 position.
-					
-					
 					try {
-						
-						// Determine the playerNo
-						if (inputLineSplit[2].equals("FIRST")) {
-							
-							if (playerName.equals(inputLineSplit[1])) {
-								
-								System.out.println("You may go first!");
-								playerNoSelf = 1;
-								playerNoOther = 2;
-								
-								this.startColourPlayer = startColourP1;
-								
-								gogui.changeGuiTitle("TURN "+playerName+" "+startColourPlayer);
-								
-							} else {
-								
-								System.out.println("The other may begin, but I hope you win!");
-								playerNoSelf = 2;
-								playerNoOther = 1;
-								
-								this.startColourPlayer = "WHITE";
-								
-								gogui.changeGuiTitle(playerName+" "+startColourPlayer);
-								
-							}
-							
-							// Not first, but it can be either a move accepted from you
-							// TURN$OPPONENT$1_2$YOU
-							// TURN$YOU$2_2$OPPONENT
-							// TURN$<TAKE>$<MOVE>$<BYLAST>
-						} else if(inputLineSplit[2].equals("PASS")) {
-							
-							if (playerName.equals(inputLineSplit[1])) {
-								
-								System.out.println("Opponent passed");
-								
-								gogui.changeGuiTitle("TURN "+playerName + " "+startColourPlayer);
-								
-							} else {
-								
-								gogui.changeGuiTitle(playerName+ " "+startColourPlayer);
-								
-							}
-							
-						} else {
-							
-
-							
-							String takeNext = inputLineSplit[1];
-							String move = inputLineSplit[2];
-							String byPlayer = inputLineSplit[3];
-							
-							String[] moveSplit = move.split("\\"+delimiter2);
-							
-							// Correction
-							String rowstr = moveSplit[0];
-							int row = Integer.parseInt(rowstr) -1;
-							
-							try {
-								
-								//inputLineSplit[2];
-								String colstr = moveSplit[1];
-								int col = Integer.parseInt(colstr) -1;
-								
-								// Track move
-								
-								if(byPlayer.equals(playerName)) {
-									
-									trackServerMove(playerNoSelf, row, col);
-
-								} else {
-									
-									trackServerMove(playerNoOther, row, col);
-									
-								}
-								
-								if(playerNoSelf == 1) {
-									playerNoSelfScore = board.getScoreP1();
-									playerNoOtherScore = board.getScoreP2();
-								} else if (playerNoSelf == 2) {
-									playerNoSelfScore = board.getScoreP2();
-									playerNoOtherScore = board.getScoreP1();
-								}
-								
-
-								
-								// Inform user of turn by server
-								
-								if(takeNext.equals(playerName)) {
-									
-									System.out.println("Hey, "+playerName+"(P"+playerNoSelf+") it's your turn!"+" Your score: "+playerNoSelfScore+" Opponent: "+playerNoOtherScore);
-									
-									
-									gogui.changeGuiTitle("TURN "+playerName+" "+startColourPlayer+" Your score: "+playerNoSelfScore+" Opponent: "+playerNoOtherScore);
-									
-								} else {
-									
-									System.out.println("Turn of: "+takeNext);
-									gogui.changeGuiTitle(playerName+" "+startColourPlayer+" Your score: "+playerNoSelfScore+" Opponent: "+playerNoOtherScore);
-									
-								}
-								
-
-								
-								
-								
-								
-							} catch (ArrayIndexOutOfBoundsException e) {
-								System.out.println("Fault at TURN");
-								e.printStackTrace();
-							}
+						startColourP1 = inputLineSplit[1];
+						try {
+							//inputLineSplit[2];
+							int boardSize = Integer.parseInt(inputLineSplit[2]);
+							setGameStateTrue(startColourP1, boardSize);			
+						} catch (ArrayIndexOutOfBoundsException e) {
+							System.out.println("Could not read boardSize...");
 							
 						}
 						
-						
 					} catch (ArrayIndexOutOfBoundsException e) {
 						
-						
+						System.out.println("Could not read startColour...");
 					}
 					
 	
 					break;
+				case HELP:
+					System.out.println("May I suggest to use: REQUESTGAME, SETTINGS, LOBBY, CHAT"
+							+ " &&ingame: MOVE, QUIT.");
+					break;
 				default:
 					break;
+			} // endof switch clientCMD
+				
+		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
+				
+			// Dont report it is printed anyway.
+				
+		}
+			
+		try {
+			// 
+			String[] inputLineSplit = inputLineCMD.split("\\" + delimiter1);
+			if (true == inGame) {
+				ServerCMDsInGame clientTurnCMDEnumVal = ServerCMDsInGame.valueOf(inputLineSplit[0]);
+				
+				switch (clientTurnCMDEnumVal) {				
+					case TURN:
+						// You can change this anytime, Before or after invoking RequestGame.
+						// Settings will be leading only if P1 position.
+						
+						
+						try {
+							
+							// Determine the playerNo
+							if (inputLineSplit[2].equals("FIRST")) {
+								
+								if (playerName.equals(inputLineSplit[1])) {
+									
+									System.out.println("You may go first!");
+									playerNoSelf = 1;
+									playerNoOther = 2;
+									
+									this.startColourPlayer = startColourP1;
+									
+									gogui.changeGuiTitle("TURN " + playerName 
+											+ " " + startColourPlayer);
+									
+								} else {
+									
+									System.out.println("The other may begin, but I hope you win!");
+									playerNoSelf = 2;
+									playerNoOther = 1;
+									
+									this.startColourPlayer = "WHITE";
+									
+									gogui.changeGuiTitle(playerName + " " + startColourPlayer);
+									
+								}
+								
+								// Not first, but it can be either a move accepted from you
+								// TURN$OPPONENT$1_2$YOU
+								// TURN$YOU$2_2$OPPONENT
+								// TURN$<TAKE>$<MOVE>$<BYLAST>
+							} else if (inputLineSplit[2].equals("PASS")) {
+								
+								if (playerName.equals(inputLineSplit[1])) {
+									
+									System.out.println("Opponent passed");
+									
+									gogui.changeGuiTitle("TURN " 
+											+ playerName + " " + startColourPlayer);
+									
+								} else {
+									
+									gogui.changeGuiTitle(playerName + " " + startColourPlayer);
+									
+								}
+								
+							} else {
+								
+	
+								
+								String takeNext = inputLineSplit[1];
+								String move = inputLineSplit[2];
+								String byPlayer = inputLineSplit[3];
+								
+								String[] moveSplit = move.split("\\" + delimiter2);
+								
+								// Correction
+								String rowstr = moveSplit[0];
+								int row = Integer.parseInt(rowstr) - 1;
+								
+								try {
+									
+									//inputLineSplit[2];
+									String colstr = moveSplit[1];
+									int col = Integer.parseInt(colstr) - 1;
+									
+									// Track move
+									
+									if (byPlayer.equals(playerName)) {
+										
+										trackServerMove(playerNoSelf, row, col);
+	
+									} else {
+										
+										trackServerMove(playerNoOther, row, col);
+										
+									}
+									
+									if (playerNoSelf == 1) {
+										playerNoSelfScore = board.getScoreP1();
+										playerNoOtherScore = board.getScoreP2();
+									} else if (playerNoSelf == 2) {
+										playerNoSelfScore = board.getScoreP2();
+										playerNoOtherScore = board.getScoreP1();
+									}
+									
+	
+									
+									// Inform user of turn by server
+									
+									if (takeNext.equals(playerName)) {
+										
+										System.out.println("Hey, "
+											+ playerName + "(P" + playerNoSelf + ") it's your turn!"
+											+ " Your score: " + playerNoSelfScore + " Opponent: "
+											+ playerNoOtherScore);
+										
+										
+										gogui.changeGuiTitle("TURN "
+												+ playerName + " " + startColourPlayer 
+												+ " Your score: " + playerNoSelfScore
+												+ " Opponent: " + playerNoOtherScore);
+										
+									} else {
+										
+										System.out.println("Turn of: " + takeNext);
+										gogui.changeGuiTitle(playerName
+												+ " " + startColourPlayer 
+												+ " Your score: " + playerNoSelfScore 
+												+ " Opponent: " + playerNoOtherScore);
+										
+									}
+									
+								} catch (ArrayIndexOutOfBoundsException e) {
+									System.out.println("Fault at TURN");
+									e.printStackTrace();
+								}
+								
+							}
+							
+							
+						} catch (ArrayIndexOutOfBoundsException e) {
+							
+							
+						}
+						
+		
+						break;
+					default:
+						break;
 				} // endof switch
 				
 			}
@@ -538,13 +593,20 @@ public class Client {
 		
 	}
 	
+    /**
+     * Tracking the response of the server, with the GUI, 
+     * but also by moving on an own internal board.
+     * This board is shared with the server, and thus also checking rules !
+     * @param moveForPlayerNo.	specify the player number to move for.
+     * @param row				row number to put stone
+     * @param col				collumn number to put stone
+     */
 	private void trackServerMove(int moveForPlayerNo, int row, int col) {
 		
-		if(board.isMoveValid(moveForPlayerNo, row, col)) {
+		if (board.isMoveValid(moveForPlayerNo, row, col)) {
 			
 			try {
-				// TODO Auto-generated method stub
-				List<Stone> toRemoveStonesGui=board.putStoneForPlayer(moveForPlayerNo, row, col);
+				List<Stone> toRemoveStonesGui = board.putStoneForPlayer(moveForPlayerNo, row, col);
 				// false = 1, true = 2
 				if (moveForPlayerNo == 1) {
 					gogui.addStoneRC(row, col, false);
@@ -552,7 +614,7 @@ public class Client {
 					gogui.addStoneRC(row, col, true);
 				}
 				
-				toRemoveStonesGui.forEach((stone)-> {
+				toRemoveStonesGui.forEach((stone) -> {
 					gogui.removeStoneRC(stone.getRow(), stone.getCol());
 				});
 				
@@ -560,19 +622,20 @@ public class Client {
 				
 				System.out.println("Ko rule violation ! Try again.");
 			}
-
-
 			
 		}
 		
-		
 	}
-
-	private void setGameStateTrue(String startColourP1, int boardSize) {
-		// TODO Auto-generated method stub		
+    /**
+     * Set the game state of the client to True.
+     * Also launches a GUI to communicate with.
+     * @param startColourP1input	Colour of interest (string)
+     * @param boardSize				Size of the square board (boardSize x boardSize
+     */
+	private void setGameStateTrue(String startColourP1input, int boardSize) {
 		inGame = true;
 		
-		this.startColourP1 = startColourP1;
+		this.startColourP1 = startColourP1input;
 		
 		// Internal tracking
 		board = new board.Board(boardSize);
@@ -584,9 +647,11 @@ public class Client {
         gogui.changeGuiTitle(playerName);
 
 	}
-
+    /**
+     * Grabs command line input and sends it directly to the server.
+     * @param clientTextInputPacket
+     */
 	private void clientTUIResponder(ClientTextInputPacket c) {
-		// TODO Auto-generated method stub
 		
 		// Filtering of commands
 		// Things like that
@@ -598,18 +663,22 @@ public class Client {
 		// Put into sender queue
 		clientOutToServerQueue.add(new ClientOutToServerPacket(c.getInputLine()));
 		// Second ✓
-		System.out.print ("✓");
+		System.out.print("✓");
 		
 	}
 
-	private void FlushClientOutbox() {
-		// TODO Auto-generated method stub
+    /**
+     * Send all the enqueued packets to the server.
+     * 
+     */
+	
+	private void flushClientOutbox() {
 		
 		// Queue<ClientTextInputPacket> clientTextInputPacket
 		List<ClientOutToServerPacket> localPolledQueue = new ArrayList<ClientOutToServerPacket>();
 		Boolean done = false;
 		
-		while(!done) {
+		while (!done) {
 			ClientOutToServerPacket polledObject = clientOutToServerQueue.poll();
 			// null is the native response for 'no queue items left'
 			if (polledObject != null) {
@@ -627,7 +696,7 @@ public class Client {
 		// Pass all to clientResponderServlet
 		
 		if (textQueue.size() > 0) {
-			textQueue.forEach((c)->{
+			textQueue.forEach((c) -> {
 				//System.out.println("SENDING OUT..."); 
 				// Write line
 				try {
@@ -640,8 +709,7 @@ public class Client {
 					
 					
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					// Do not report
 				}
 				//System.out.println("END OUT.......");
 				
@@ -654,52 +722,60 @@ public class Client {
 		
 	}
 
+    /**
+     * Handler for the attached socket with the server.
+     * All caught lines in UTF-8 that are \n delimited are enqueued.
+     */
+	
 	// Method to receive messages
-	private void HandleClientInbox() {
+	private void handleClientInbox() {
 		
 		// Respond to the server input
 		// Auto closing
 		try (
                 BufferedReader in = new BufferedReader(new InputStreamReader(skt.getInputStream()));
             ) {
-                String inputLineUTF8;
-                String inputLine = null; //UTF16
-                while ((inputLineUTF8 = in.readLine()) != null) {
-                	
-                	try {
-                	    // Convert from Unicode to UTF-8
-                	    byte[] utf8 = inputLineUTF8.getBytes("UTF-8");
+            String inputLineUTF8;
+            String inputLine = null; //UTF16
+            while ((inputLineUTF8 = in.readLine()) != null) {
+            	
+            	try {
+            	    // Convert from Unicode to UTF-8
+            	    byte[] utf8 = inputLineUTF8.getBytes("UTF-8");
 
-                	    // Convert from UTF-8 to Unicode
-                	    inputLine = new String(utf8, "UTF-8");
-                	} catch (UnsupportedEncodingException e) {
-                	}
-                	
-                	// Add packet to the queue if a \n is seen.
-                	
-                	serverInToClientQueue.add(new ServerInToClientPacket(inputLine));
-                	
-                }
-                
-            } catch (IOException e) {
-            	e.printStackTrace();
+            	    // Convert from UTF-8 to Unicode
+            	    inputLine = new String(utf8, "UTF-8");
+            	} catch (UnsupportedEncodingException e) {
+            	}
+            	
+            	// Add packet to the queue if a \n is seen.
+            	
+            	serverInToClientQueue.add(new ServerInToClientPacket(inputLine));
+            	
             }
+            
+        } catch (IOException e) {
+        	e.printStackTrace();
+        }
 		
 	}
 	
-	private void HandleTUI(BufferedReader bufferedReaderTextInput) {
-		// TODO Auto-generated method stub
+    /**
+     * Handler for the attached system.in for console inputs.
+     */
+	private void handleTUI(BufferedReader bufferedReaderTextInput) {
 		while (true) {
 			try {
 				// Each line is seen as a command, and put into the queue
 				
-				clientTextInputQueue.add(new ClientTextInputPacket(bufferedReaderTextInput.readLine()));
+				clientTextInputQueue.add(new ClientTextInputPacket(
+						bufferedReaderTextInput.readLine()));
 				// First ✓
 				System.out.print("✓");
 				
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// ignore
+				//e.printStackTrace();
 			}
 		}
 		
