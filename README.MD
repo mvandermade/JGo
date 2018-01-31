@@ -39,7 +39,7 @@ git clone https://github.com/mvandermade/JGo.git
 
 --use any program you like
 
-# Option C Via .zip
+Option C Via .zip
 Download the .zip of 'final' via the GitHub Page https://github.com/mvandermade/JGo using a webbrowser
 Click clone or download > Download ZIP. Then extract the file.
 

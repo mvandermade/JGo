@@ -331,7 +331,7 @@ public class Server implements Runnable {
 						
 						connMan.getToServerQueue().add(new ToServerPacket(
 								clientId,
-								"CHAT" + DELIMITER1 + "playMan.getPlayerName(clientId)" + DELIMITER1
+								"CHAT" + DELIMITER1
 								+ "Autotyper: Hello! I am " 
 								+ playMan.getPlayerName(clientId)
 								+ " just joined you in the server."));

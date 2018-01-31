@@ -357,7 +357,11 @@ public class GOGUIImpl extends Application {
 
         if (mode3D) {
             hint = new Sphere(currentSquareSize / 2);
+            
             ((Sphere) hint).setMaterial(yellowMaterial);
+            ((Sphere) hint).setOnMouseEntered((e) -> {
+            	hint.setVisible(false);
+            });
         } else {
             hint = new Circle(currentSquareSize / 2);
             ((Circle) hint).setFill(Color.YELLOW);

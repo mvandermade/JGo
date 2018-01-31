@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import board.Board;
@@ -79,11 +80,12 @@ public class Client {
      * Only in case of the client all methods are shared in one class.
      * This was mainly done due to the easier exchange of fields.
      * 
-     * @return	
+     *
      * 
      */
 	public Client() {
-		System.out.println("May I suggest to use: REQUESTGAME, SETTINGS, LOBBY, CHAT"
+		
+		System.out.println("May I suggest to use: REQUESTGAME, SETTINGS, LOBBY, CHAT" 
 				+ " &&ingame: MOVE, QUIT.");
 		System.out.println("DELIMITERS: COMMAND<DELIMITER1>PAYLOAD");
 		System.out.println("PAYLOAD IS DELIMITED USING <DELIMITER2>");
@@ -392,7 +394,7 @@ public class Client {
 		
 		if (printServerDebug) {
 			
-			System.out.println("Server(filtered) said: " + inputLineCMD);
+			System.out.println(">Server> " + inputLineCMD);
 			printServerDebug = false;
 		}
 		
@@ -623,7 +625,41 @@ public class Client {
 				System.out.println("Ko rule violation ! Try again.");
 			}
 			
+			// The server announces that the other player has moved
+			if (playerNoOther == moveForPlayerNo) {
+				buddyAI();
+			}
+			
 		}
+		
+	}
+
+	/**
+	 * An AI which places a marker on the board and prints out text for you to copy.
+	 * You can trigger it to post for you if you flip the settings switch
+	 */
+	public void buddyAI() {
+		
+		gogui.removeHintIdicator();
+		
+		int aiX = ThreadLocalRandom.current().nextInt(0, board.getBoardSize());
+		int aiY = ThreadLocalRandom.current().nextInt(0, board.getBoardSize());
+		
+		int aiCol = aiX + 1;
+		int aiRow = aiY + 1;
+		// Right now totally random advice.
+		// In future use functionality of Board to decide based on chain length/shape etc.
+		// Create some sort of 'fitness function'.
+		System.out.println("<buddyAI> HINT:");
+		String buddyAIout = "MOVE$" + aiCol + "_" + aiRow;
+		System.out.println(buddyAIout);
+		if (playerName.equals("AIAI") || playerName.equals("AIAI2")) {
+			clientTextInputQueue.add(new ClientTextInputPacket(
+					buddyAIout));
+			System.out.println("buddy moves for you!");
+		}
+		
+		gogui.addHintIndicator(aiX, aiY);
 		
 	}
     /**

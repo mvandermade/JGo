@@ -395,5 +395,9 @@ public class Board {
 		return scoreP2;
 	}
 	
+	public int getBoardSize() {
+		return boardSize;
+	}
+	
 
 }
