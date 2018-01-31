@@ -26,8 +26,10 @@ public interface GOGUI {
     /**
      * Removes any existing stone at the given position.
      * Does nothing if the position currently has no stone/area indicator.
-     * @param x the x coordinate of the stone/area indicator to remove, ranges from 0 to boardSize - 1.
-     * @param y the y coordinate of the stone/area indicator to remove, ranges from 0 to boardSize - 1.
+     * @param x the x coordinate of the stone/area indicator 
+     * to remove, ranges from 0 to boardSize - 1.
+     * @param y the y coordinate of the stone/area indicator 
+     * to remove, ranges from 0 to boardSize - 1.
      * @throws InvalidCoordinateException when x or y coordinate fall outside of the board.
      */
     void removeStone(int x, int y) throws InvalidCoordinateException;
@@ -61,12 +63,12 @@ public interface GOGUI {
     void clearBoard();
 
     /**
-     * Starts the GO graphical user interface
+     * Starts the GO graphical user interface.
      */
     void startGUI();
 
     /**
-     * Stops the GO graphical user interface
+     * Stops the GO graphical user interface.
      */
     void stopGUI();
 

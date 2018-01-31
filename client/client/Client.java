@@ -15,20 +15,26 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import board.Board;
-import board.BoardKoRuleViolated;
+import board.BoardKoRuleViolatedE;
 import board.Stone;
+import clientView.ClientOutToServerPacket;
+import clientView.ClientTextInputPacket;
+import clientView.ServerInToClientPacket;
 import gui.GoGUIIntegrator;
 
 public class Client {
 	
-	
 	// TUI
-	final Queue<ClientTextInputPacket> clientTextInputQueue = new ConcurrentLinkedQueue<ClientTextInputPacket>();
+	final Queue<ClientTextInputPacket> clientTextInputQueue =
+			new ConcurrentLinkedQueue<ClientTextInputPacket>();
 	
 	// Outbox TCP
-	final Queue<ClientOutToServerPacket> clientOutToServerQueue = new ConcurrentLinkedQueue<ClientOutToServerPacket>();
+	final Queue<ClientOutToServerPacket> clientOutToServerQueue =
+			new ConcurrentLinkedQueue<ClientOutToServerPacket>();
+	
 	// Inbox TCP
-	final Queue<ServerInToClientPacket> serverInToClientQueue = new ConcurrentLinkedQueue<ServerInToClientPacket>();
+	final Queue<ServerInToClientPacket> serverInToClientQueue =
+			new ConcurrentLinkedQueue<ServerInToClientPacket>();
 	
 	private Socket skt = null;
 	
@@ -41,13 +47,17 @@ public class Client {
 	
 	private GoGUIIntegrator gogui = null;
 	
-	private String DELIMITER1 = "$";
-	private String DELIMITER2 = "_";
+	private String delimiter1 = "$";
+	private String delimiter2 = "_";
 	
 	private int pollQueueTime;
 	
 	// For the game initialisation
 	private String playerName = null;
+	//Server details
+	private String serverHostname = null;
+	private String serverPort = null;
+	
 	
 	// For determining the colors
 	private int playerNoSelf = 0;
@@ -57,14 +67,28 @@ public class Client {
 
 	private String startColourPlayer;
 	
-
-	public Client(String servername, int port) {
+    /**
+     * The client application is designed to connect to a server that
+     * Uses the communication protocol 5 from the nedap university 3.
+     * 
+     * It acts as a 'smart' terminal, meaning that commands can be 
+     * rerouted to for instance a graphical user interface.
+     * Also the client filters messages the server sends.
+     * 
+     * The internal messaging service has similarities with the server
+     * Only in case of the client all methods are shared in one class.
+     * This was mainly done due to the easier exchange of fields.
+     * 
+     * @return	
+     * 
+     */
+	public Client() {
 		// TODO Auto-generated constructor stub
 		
 		System.out.println("Hi! Please state your player name:");
 		
 		// Poll for the name of the player
-		while(null == playerName) {
+		while (null == playerName) {
 			try {
 				playerName = (new BufferedReader(new InputStreamReader(System.in))).readLine();
 			} catch (IOException e) {
@@ -72,10 +96,42 @@ public class Client {
 				System.out.println("Need a name to continue");
 				e.printStackTrace();
 			}
-			System.out.println("Client: got:, "+playerName+" as input, please enter the IP or Hostname of a server:");
+			
+		}
+		System.out.println("Client: got:, " 
+				+ playerName
+				+ " as input, please enter the IP or Hostname of a server:");
+		
+		while (null == serverHostname) {
+			try {
+				serverHostname = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("Need a hostname to continue");
+				e.printStackTrace();
+			}
+			
 		}
 		
-		clientOutToServerQueue.add(new ClientOutToServerPacket("NAME"+DELIMITER1+playerName));
+		System.out.println("Client: got:, " 
+				+ serverHostname
+				+ " as input, please enter the port (default NU3.0: 5647):");
+		
+		while (null == serverPort) {
+			try {
+				serverPort = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("Need a hostname to continue");
+				e.printStackTrace();
+			}
+			
+		}
+		
+		
+		clientOutToServerQueue.add(new ClientOutToServerPacket("NAME"
+				+ delimiter1 
+				+ playerName));
 		
 		clientOutToServerQueue.add(new ClientOutToServerPacket("REQUESTGAME"));
 		// Repeate the playerName bufferedreader concept for IP and port (parseToInt)
@@ -83,11 +139,15 @@ public class Client {
 		
 		
 		// 200ms mainloop delay
-		this.pollQueueTime = 200;
+		this.pollQueueTime = 50;
 		
 		try {
-			skt = new Socket(servername, port);
-			bufferedWriterToServer = new BufferedWriter( new OutputStreamWriter( skt.getOutputStream()) );
+			skt = new Socket(serverHostname, Integer.parseInt(serverPort));
+			bufferedWriterToServer = new BufferedWriter(
+					new OutputStreamWriter(
+							skt.getOutputStream()
+							)
+					);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -96,7 +156,7 @@ public class Client {
 			e.printStackTrace();
 		}
 		
-		System.out.println("Connected to: "+servername+":"+port);
+		System.out.println("Connected to: " + serverHostname + ":" + serverPort);
 		System.out.println("Need to send stuff here... version and stuff");
 		
 		// Use a part of the server thread
@@ -121,6 +181,13 @@ public class Client {
 		
 	}
 	
+    /**
+     * In stages this loop will continously poll
+     * 
+     * @param	
+     * @return	void
+     */
+	
 	private void runClientLoop() {
 		// TODO Auto-generated method stub
 		while (true) {
@@ -142,12 +209,14 @@ public class Client {
 			
 			//3 Check the GUI (if on)
 			if (null != gogui) {
-				gogui.getGuiClickResultToArray().forEach((guiClick)->{
+				gogui.getGuiClickResultToArray().forEach((guiClick) -> {
 					
 					// Pretend as if the gui types an inputline and handle it.
 					System.out.println("■");
 					System.out.println(guiClick.getInputLine());
-					clientTUIResponder(new ClientTextInputPacket("MOVE"+DELIMITER1+guiClick.getInputLine()));
+					clientTUIResponder(new ClientTextInputPacket("MOVE"
+							+ delimiter1
+							+ guiClick.getInputLine()));
 				});
 			}
 			
@@ -255,7 +324,7 @@ public class Client {
 		
 		/////
 	
-		String[] checkInputIsClientCompliant = inputLineCMD.split("\\"+DELIMITER1);
+		String[] checkInputIsClientCompliant = inputLineCMD.split("\\"+delimiter1);
 		
 		
 		Boolean printServerDebug = false;
@@ -283,7 +352,7 @@ public class Client {
 		}
 		
 		try {
-			String[] inputLineSplit = inputLineCMD.split("\\"+DELIMITER1);
+			String[] inputLineSplit = inputLineCMD.split("\\"+delimiter1);
 			
 			ServerCMDs clientCMDEnumVal = ServerCMDs.valueOf(inputLineSplit[0]);
 			
@@ -321,7 +390,7 @@ public class Client {
 		
 		try {
 			// 
-			String[] inputLineSplit = inputLineCMD.split("\\"+DELIMITER1);
+			String[] inputLineSplit = inputLineCMD.split("\\"+delimiter1);
 			if (true == inGame) {
 				ServerCMDsInGame clientTurnCMDEnumVal = ServerCMDsInGame.valueOf(inputLineSplit[0]);
 				
@@ -384,7 +453,7 @@ public class Client {
 							String move = inputLineSplit[2];
 							String byPlayer = inputLineSplit[3];
 							
-							String[] moveSplit = move.split("\\"+DELIMITER2);
+							String[] moveSplit = move.split("\\"+delimiter2);
 							
 							// Correction
 							String rowstr = moveSplit[0];
@@ -487,7 +556,7 @@ public class Client {
 					gogui.removeStoneRC(stone.getRow(), stone.getCol());
 				});
 				
-			} catch (BoardKoRuleViolated e) {
+			} catch (BoardKoRuleViolatedE e) {
 				
 				System.out.println("Ko rule violation ! Try again.");
 			}

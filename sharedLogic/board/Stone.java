@@ -6,6 +6,14 @@ public class Stone {
 	public int row;
 	public int col;
 	
+	/**
+	 * Holder of stone data of a particular playerNo.
+	 * 
+	 * @param 	playerNo	Owner of the stone
+	 * @param	row			row of position on the board
+	 * @param	col			collumn of position on the board
+	 * 
+	 */
 	
 	Stone(int playerNo, int row, int col) {
 		this.playerNo = playerNo;

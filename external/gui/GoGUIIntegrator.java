@@ -2,7 +2,7 @@ package gui;
 
 import java.util.List;
 
-import client.ClientTextInputPacket;
+import clientView.ClientTextInputPacket;
 import javafx.application.Platform;
 
 /**

@@ -31,11 +31,20 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import client.ClientTextInputPacket;
-
+import clientView.ClientTextInputPacket;
 
 public class GOGUIImpl extends Application {
-
+	
+	/**
+	 * Application file for GoGui
+	 * Created by daan.vanbeek on 13-12-16.
+	 * Modified by martijn.vandermade on 31-01-18
+	 * 
+	 * @param	
+	 * @return	
+	 * @see GoGUIIntegrator.java
+	 */
+	
     private final static int INITIAL_BOARD_SIZE = 19;
     private final static int INITIAL_SQUARE_SIZE = 50;
 
@@ -86,11 +95,27 @@ public class GOGUIImpl extends Application {
     	
     }
     
+    /**
+     * Adds guiPackets to the guiClickResult local queue.
+     * Concurrent, meaning the queueing is more thread-safe.
+     * 
+     * @param	guiPacket
+     * @return	void
+     * @see initBoardLines();
+     */
+    
     private void addGuiClickResult(ClientTextInputPacket guiPacket) {
     	
     	guiClickResult.add(guiPacket);
     }
     
+    /**
+     * Changes the GUI system UI title bar.
+     * 
+     * @param	guiTitle the preffered title
+     * @return	void
+     * @see
+     */
     public void changeGuiTitle(String guiTitle) {
     	
     	// use instance otherwise mainThread error
@@ -226,6 +251,17 @@ public class GOGUIImpl extends Application {
 
         initBoardLines();
     }
+    
+    /**
+     * Creates the initial playing board grid.
+     * + Added:
+     * Onclick event on the corners will generate a new object with the text label as input.
+     * new ClientTextInputPacket(labelCircle.getText());
+     * It is passed to: addGuiClickResult();
+     * @param	
+     * @return	void
+     * @see addGuiClickResult();
+     */
 
     private void initBoardLines() {
         root.getChildren().removeAll(boardLines);
@@ -254,11 +290,6 @@ public class GOGUIImpl extends Application {
         for (int xCoord = 1; xCoord <= height; xCoord++) {
         	for (int yCoord = 1; yCoord <= width; yCoord++) {
         		
-        		//Circle addCircleOuter = new Circle(addCircleOuterRadius);
-        		//addCircleOuter.relocate(xCoord * squareSize - addCircleOuterRadius, yCoord * squareSize - addCircleOuterRadius);
-    			//addCircleOuter.setStroke(Color.grayRgb(100, 0.3));
-    			//addCircleOuter.setFill(Color.grayRgb(100, 0.1));
-        		
         		Circle addCircle = new Circle(addCircleRadius);
         		addCircle.setStroke(Color.grayRgb(100, 0.3));
         		addCircle.setFill(Color.grayRgb(100, 0.1));
@@ -274,69 +305,38 @@ public class GOGUIImpl extends Application {
         		labelCircle.setText(""+yCoord+"_"+xCoord);
         		labelCircle.relocate(xCoord * squareSize - labelCircleRadius, yCoord * squareSize - labelCircleRadius);
         		
-        		
-        		
         		// Inner blob
         		
         		addCircle.setOnMouseClicked(e -> {
         		    addGuiClickResult(new ClientTextInputPacket(labelCircle.getText()));
-        		    
         		});
         		
         		addCircle.setOnMouseEntered(e-> {
         			addCircle.setFill(Color.ORANGE);
         			addCircle.setStroke(Color.WHITE);
-        			//addCircleOuter.setStroke(Color.grayRgb(100, 0.1));
-        			//addCircleOuter.setFill(Color.grayRgb(100, 0.1));
         			labelCircle.setVisible(true);
         		});
         		
         		addCircle.setOnMouseExited(e-> {
         			addCircle.setFill(Color.grayRgb(100, 0.1));
         			addCircle.setStroke(Color.grayRgb(100, 0.3));
-        			//addCircleOuter.setStroke(Color.grayRgb(100, 0.1));
-        			//addCircleOuter.setFill(Color.grayRgb(100, 0.1));
         			labelCircle.setVisible(false);
         		});
-        		
-        		// Outer blob
-//        		addCircleOuter.setOnMouseEntered(e -> {
-//        			
-//        			addCircle.setFill(Color.WHITE);
-//        			
-//        			addCircleOuter.setStroke(Color.grayRgb(100, 0.1));
-//        			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
-//        		});
-//        		
-//        		addCircleOuter.setOnMouseExited(e -> {
-//        			
-//        			addCircle.setFill(Color.grayRgb(100, 0.1));
-//        			
-//        			addCircleOuter.setStroke(Color.grayRgb(100, 0.1));
-//        			addCircleOuter.setFill(Color.grayRgb(100, 0.1));
-//        			
-//        		});
         		
         		// Text
         		labelCircle.setOnMouseEntered(e-> {
         			addCircle.setFill(Color.grayRgb(100, 0.1));
         			addCircle.setStroke(Color.grayRgb(100, 0.3));
-        			//addCircleOuter.setStroke(Color.grayRgb(100, 0.1));
-        			//addCircleOuter.setFill(Color.grayRgb(100, 0.1));
         			labelCircle.setVisible(false);
         		});
         		
         		labelCircle.setOnMouseExited(e-> {
         			addCircle.setFill(Color.grayRgb(100, 0.1));
         			addCircle.setStroke(Color.grayRgb(100, 0.3));
-        			//addCircleOuter.setStroke(Color.grayRgb(100, 0.1));
-        			//addCircleOuter.setFill(Color.grayRgb(100, 0.1));
         			labelCircle.setVisible(false);
         		});
         		
         		// Add to stack
-        		
-        		//clickables.add(addCircleOuter);
         		clickables.add(addCircle);
         		clickablesText.add(labelCircle);
         		

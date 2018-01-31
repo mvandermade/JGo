@@ -1,4 +1,4 @@
-package serverModel;
+package serverView;
 
 import server.Server;
 
@@ -9,17 +9,27 @@ public class ToClientPacket {
 	private int clientId;
 	private long startTime;
 	private String servDELIMITER1 = Server.getDELIMITER1();
-	private String servDELIMITER2 = Server.getDELIMITER2();
 
+    /**
+     * The object is a data storage of an string of data, a timestamp made on
+     * creation on the object and the clientId. 
+     * It is used to save messages that are outbound towards a client.
+     * 
+     * @param	clientId	The clientId number this package should go to
+     * @param	serverCMD	The string containing the type of command the server sends
+     * @param	outputLine	The string containing the command payload.
+     * @return	void
+     * 
+     * 
+     *
+     */
 	public ToClientPacket(int clientId, String serverCMD, String outputLine) {
 		
 		
-		this.setOutputLine(serverCMD+servDELIMITER1+outputLine);
+		this.setOutputLine(serverCMD + servDELIMITER1 + outputLine);
 		this.setClientId(clientId);
 		this.setStartTime(System.nanoTime());
 		
-		//System.out.print("creating transmission packet...");
-		//System.out.println(this.stringify());
 	}
 
 	private void setClientId(int clientId) {
@@ -48,7 +58,9 @@ public class ToClientPacket {
 	}
 	
 	public String stringify() {
-		return "TO" + this.clientId +")" + this.serverCMD + this.servDELIMITER1 + this.outputLine + " AT:" + this.startTime;
+		return "TO" + this.clientId + ")"
+				+ this.serverCMD + this.servDELIMITER1
+				+ this.outputLine + " AT:" + this.startTime;
 	}
 
 	public String getServerCMD() {

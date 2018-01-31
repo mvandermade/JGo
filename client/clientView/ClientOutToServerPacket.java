@@ -1,10 +1,18 @@
-package client;
+package clientView;
 
 public class ClientOutToServerPacket {
 	
 	private long startTime;
 	private String inputLine;
 
+    /**
+     * The object is a data storage of an string of data, a timestamp made on
+     * creation on the object and the clientId. 
+     * It is used to send messages towards the server later on.
+     * 
+     * @param	inputLine	The output that needs to be sent.
+     * @return	void
+     */
 	public ClientOutToServerPacket(String inputLine) {
 		
 		this.setStartTime(System.nanoTime());

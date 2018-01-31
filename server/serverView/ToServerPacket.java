@@ -1,11 +1,23 @@
-package serverModel;
+package serverView;
 
 public class ToServerPacket {
 	
 	private String inputLine;
 	private int clientId;
 	private long startTime;
-
+	
+    /**
+     * The object is a data storage of an string of data, a timestamp made on
+     * creation on the object and the clientId. 
+     * It is used to save messages that are inbound towards the server.
+     * 
+     * @param	clientId	The clientId number this package should go to
+     * @param	inputLine	The output to be sent to the client.
+     * @return	void
+     * 
+     * 
+     *
+     */
 	public ToServerPacket(int clientId, String inputLine) {
 		
 		this.setInputLine(inputLine);
