@@ -227,6 +227,39 @@ public class GameManager {
 		
 		GameObj toQuitGameObj = getGameObjForClient(clientId);
 		
+		// Scoring
+		// Communicate the highest score first.
+		if (toQuitGameObj.getBoard().getScoreP1() >=
+				toQuitGameObj.getBoard().getScoreP2()) {
+			// Now signal that the game is being destroyed
+			toQuitGameObj.messageBoth("ENDGAME",
+					"QUIT"
+					+ server.Server.getDELIMITER1()
+					+ toQuitGameObj.getP1().getName()
+					+ server.Server.getDELIMITER1()
+					+ toQuitGameObj.getBoard().getScoreP1()
+					+ server.Server.getDELIMITER1()
+					+ toQuitGameObj.getP2().getName()
+					+ server.Server.getDELIMITER1()
+					+ toQuitGameObj.getBoard().getScoreP2());
+			
+		} else {
+			
+			// Now signal that the game is being destroyed
+			toQuitGameObj.messageBoth("ENDGAME",
+					"QUIT"
+					+ server.Server.getDELIMITER1()
+					+ toQuitGameObj.getP2().getName()
+					+ server.Server.getDELIMITER1()
+					+ toQuitGameObj.getBoard().getScoreP2()
+					+ server.Server.getDELIMITER1()
+					+ toQuitGameObj.getP1().getName()
+					+ server.Server.getDELIMITER1()
+					+ toQuitGameObj.getBoard().getScoreP1());
+			
+		}
+		
+		
 		final int toRemoveGameId = toQuitGameObj.getGameId();
 		games.removeIf(gameObj -> {
 		    return gameObj.getGameId() == toRemoveGameId;
@@ -236,9 +269,7 @@ public class GameManager {
 		toQuitGameObj.getP1().setIsInGame(false);
 		toQuitGameObj.getP2().setIsInGame(false);
 		
-		// Now signal that the game is being destroyed
-		toQuitGameObj.messageBoth("ENDGAME", "QUIT cmd given by:"
-				+ playMan.getPlayerName(clientId));
+
 
 	}
 	

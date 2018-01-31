@@ -154,6 +154,10 @@ public class GameObj {
 	public int getBoardSize() {
 		return boardSize;
 	}
+	
+	public board.Board getBoard() {
+		return board;
+	}
 
 	public PlayerObj getPlayerObj(int clientId) {
 		PlayerObj playerObj = null; 
