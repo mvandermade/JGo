@@ -1,0 +1,13 @@
+/board/
+/client/
+/clientController/
+/clientModel/
+/clientView/
+/gui/
+/server/
+/serverController/
+/serverModel/
+/serverView/
+/StartClient.class
+/StartServer.class
+/main/
