@@ -529,13 +529,13 @@ public class Client {
 								
 								// Correction
 								String rowstr = moveSplit[0];
-								int row = Integer.parseInt(rowstr) - 1;
+								int row = Integer.parseInt(rowstr);
 								
 								try {
 									
 									//inputLineSplit[2];
 									String colstr = moveSplit[1];
-									int col = Integer.parseInt(colstr) - 1;
+									int col = Integer.parseInt(colstr);
 									
 									// Track move
 									

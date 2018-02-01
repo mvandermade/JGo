@@ -302,9 +302,6 @@ public class GameObj {
 		if (clientId == this.hasTurnClientId) {
 			if (board.isMoveValid(getPlayerNumber(clientId), row, col)) {
 				
-				int rowplus1 = row + 1;
-				int colplus1 = col + 1;
-				
 				try {
 					board.putStoneForPlayer(getPlayerNumber(clientId), row, col);
 					System.out.println("P1 Score:" + board.getScoreP1());
@@ -316,9 +313,9 @@ public class GameObj {
 					messageBoth("TURN",
 							getPlayerNameOf(this.hasTurnClientId)
 							+ delimiter1
-							+ rowplus1 
+							+ row
 							+ delimiter2
-							+ colplus1
+							+ col
 							+ delimiter1
 							+ getNextPlayerNameOf(this.hasTurnClientId));
 					
@@ -335,7 +332,7 @@ public class GameObj {
 				
 			} else {
 				// Wrong
-				messageClientId(clientId, "ERROR", "Invalid Move !");	
+				messageClientId(clientId, "INVALIDMOVE", "Invalid Move !");	
 			}
 		} else {
 			
@@ -366,16 +363,16 @@ public class GameObj {
 			} else {
 				
 				// Answer to client $TURN$nextPlayerName$row_col$currentPlayerName
-				messageBoth("INFO",
-						"\n" 
-						+ board.toStringClient());
+				//messageBoth("INFO",
+				//		"\n" 
+				//		+ board.toStringClient());
 				
 				messageBoth("TURN",
-						getNextPlayerNameOf(this.hasTurnClientId)
+						getPlayerNameOf(this.hasTurnClientId)
 						+ delimiter1 
 						+ "PASS" 
 						+ delimiter1
-						+ getPlayerNameOf(this.hasTurnClientId));
+						+ getNextPlayerNameOf(this.hasTurnClientId));
 
 				// Switch turn (depending on implementation)
 				this.hasTurnClientId = getNextPlayerClientIdOf(this.hasTurnClientId);

@@ -156,13 +156,13 @@ public class GameManager {
 			
 			if (null != errorToQuitGameObj) {
 				// This query of grabbing P2 should give a result
-				errorToQuitGameObj.messageP1("ENDGAME", "QUIT cmd given by:"
+				errorToQuitGameObj.messageP1("ENDGAME", "ABORTED"
 						+ playMan.getPlayerName(clientId));
 			}
 
 		} else {
 				// Now signal that the game is being destroyed
-			errorToQuitGameObj.messageP2("ENDGAME", "QUIT cmd given by:"
+			errorToQuitGameObj.messageP2("ENDGAME", "ABORTED"
 						+ playMan.getPlayerName(clientId));
 		}
 		
@@ -233,7 +233,7 @@ public class GameManager {
 				toQuitGameObj.getBoard().getScoreP2()) {
 			// Now signal that the game is being destroyed
 			toQuitGameObj.messageBoth("ENDGAME",
-					"QUIT"
+					"ABORTED"
 					+ server.Server.getDELIMITER1()
 					+ toQuitGameObj.getP1().getName()
 					+ server.Server.getDELIMITER1()
@@ -247,7 +247,7 @@ public class GameManager {
 			
 			// Now signal that the game is being destroyed
 			toQuitGameObj.messageBoth("ENDGAME",
-					"QUIT"
+					"ABORTED"
 					+ server.Server.getDELIMITER1()
 					+ toQuitGameObj.getP2().getName()
 					+ server.Server.getDELIMITER1()

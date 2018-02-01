@@ -306,7 +306,10 @@ public class GOGUIImpl extends Application {
         		// BEWARE!! x y coordinates are cols - rows.!!!
         		labelCircle.setVisible(false);
         		
-        		labelCircle.setText("" + yCoord + "_" + xCoord);
+        		int yCoordLabel = yCoord -1;
+        		int xCoordLabel = xCoord -1;
+        		
+        		labelCircle.setText("" + yCoordLabel + "_" + xCoordLabel);
         		labelCircle.relocate(xCoord * squareSize - labelCircleRadius,
         				yCoord * squareSize - labelCircleRadius);
         		

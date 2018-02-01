@@ -283,8 +283,9 @@ public class Server implements Runnable {
 	                });
 			
 			System.out.println("^cmd processed,"
-					+ " data sent to client" + toServerPacket.getClientId()
-					+ "at: " + new java.util.Date());
+					+ " data sent to client: " + toServerPacket.getClientId()
+					+ ">" + playMan.getPlayerName(toServerPacket.getClientId()) + "< "
+					+ " at: " + new java.util.Date());
 		}
 	}
 	
@@ -338,7 +339,7 @@ public class Server implements Runnable {
 						outbox.add(new ToClientPacket(
 								clientId,
 								"CHAT",
-								"SERVER" 
+								"SERVER" + DELIMITER1
 								+ "May I suggest to use: REQUESTGAME, SETTINGS, LOBBY, CHAT"
 								+ " &&ingame: MOVE, QUIT."));
 						
@@ -538,29 +539,25 @@ public class Server implements Runnable {
 							moveDataRow = Integer.parseInt(moveData[0]);
 							moveDataCol = Integer.parseInt(moveData[1]);
 							
-							if (moveDataRow < 1
+							if (moveDataRow < 0
 									|| 
 									moveDataRow > 
-									gameMan.getGameObjForClient(clientId).getBoardSize()
+									gameMan.getGameObjForClient(clientId).getBoardSize() - 1
 									|| 
-									moveDataCol < 1 
+									moveDataCol < 0 
 									|| 
 									moveDataRow >
-									gameMan.getGameObjForClient(clientId).getBoardSize()) {
+									gameMan.getGameObjForClient(clientId).getBoardSize() - 1) {
 								
 								// Here already apply the rule to correct
 								// for starting at array integer 0 instead of 1 as in GUI/TUI.
-								moveDataRow = moveDataRow - 1;
-								moveDataCol = moveDataCol - 1;
 								// Send message
 								gameMan.getGameObjForClient(clientId).messageClientId(clientId,
-										"ERROR",
+										"INVALIDMOVE",
 										"MOVE NOT ALLOWED, OUT OF BOUNDS");
 								
 							} else {
 								
-								moveDataRow = moveDataRow - 1;
-								moveDataCol = moveDataCol - 1;
 								gameMan.tryMoveFor(clientId, moveDataRow, moveDataCol);
 								
 							}
@@ -572,7 +569,7 @@ public class Server implements Runnable {
 						
 						e.printStackTrace();
 						outbox.add(new ToClientPacket(clientId,
-								"ERROR",
+								"INVALIDMOVE",
 								"Please use the format: MOVE$row_col"));
 					}
 					
