@@ -141,8 +141,12 @@ public class GameObj {
 		messageBoth("INFO", "\n" + board.toStringClient());
 		
 		// Send out START protocol
+		//messageBoth("START", 
+		//		"2");
+		
 		messageBoth("START", 
-				this.p1Colour + delimiter1 + this.boardSize);
+				 "2" + delimiter1 + this.p1Colour + delimiter1 + this.boardSize
+				+ delimiter1 + p1.getName() + delimiter1 + p2.getName());
 		// Send out TURN protocol
 		messageBoth("TURN", 
 				getPlayerNameOf(this.hasTurnClientId)
@@ -307,16 +311,16 @@ public class GameObj {
 					System.out.println("P2 Score:" + board.getScoreP2());
 					
 					// Answer to client $TURN$nextPlayerName$row_col$currentPlayerName
-					messageBoth("INFO", "\n" + board.toStringClient());
+					//messageBoth("INFO", "\n" + board.toStringClient());
 					
 					messageBoth("TURN",
-							getNextPlayerNameOf(this.hasTurnClientId)
+							getPlayerNameOf(this.hasTurnClientId)
 							+ delimiter1
 							+ rowplus1 
 							+ delimiter2
 							+ colplus1
 							+ delimiter1
-							+ getPlayerNameOf(this.hasTurnClientId));
+							+ getNextPlayerNameOf(this.hasTurnClientId));
 					
 					// Reset pass
 					setPlayerPassState(clientId, false);
@@ -324,7 +328,7 @@ public class GameObj {
 					// Switch turn (depending on implementation)
 					this.hasTurnClientId = getNextPlayerClientIdOf(this.hasTurnClientId);
 				} catch (BoardKoRuleViolatedE e) {
-					messageClientId(clientId, "ERROR", "Ko rule violation!");
+					messageClientId(clientId, "INVALIDMOVE", "Ko rule violation!");
 					
 				}
 				

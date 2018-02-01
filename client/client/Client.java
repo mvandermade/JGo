@@ -147,12 +147,12 @@ public class Client {
 				+ delimiter1
 				+ "VERSION"
 				+ delimiter1
-				+ "5"
+				+ "6"
 				+ delimiter1
 				+ "EXTENSIONS"
 				+ delimiter1
-				+ "0" + delimiter1 + "0" + delimiter1 + "0" + delimiter1 + "0" + delimiter1
-				+ "0" + delimiter1 + "0" + delimiter1 + "0" + delimiter1
+				+ "1" + delimiter1 + "1" + delimiter1 + "1" + delimiter1 + "1" + delimiter1
+				+ "1" + delimiter1 + "1" + delimiter1 + "1" + delimiter1
 				));
 		
 		
@@ -405,22 +405,41 @@ public class Client {
 			
 			switch (clientCMDEnumVal) {
 				case START:
+					
+					// The START Command is used twice in a row.
+					// When only START$<playerNo> is seen, send the settings back to the server.
+					// So START 2
+					// Then respond with SETTINGS$BLACK$19
+					//
+					// BUT! When more are seen:
+					// START 2 BLACK 19 jan piet
+					
 					// You can change this anytime, Before or after invoking RequestGame.
 					// Settings will be leading only if P1 position.
+					
+					// First try to read the [2] argument
+					
 					try {
-						startColourP1 = inputLineSplit[1];
+						startColourP1 = inputLineSplit[2];
 						try {
 							//inputLineSplit[2];
-							int boardSize = Integer.parseInt(inputLineSplit[2]);
-							setGameStateTrue(startColourP1, boardSize);			
+							int boardSize = Integer.parseInt(inputLineSplit[3]);
+							setGameStateTrue(startColourP1, boardSize);
+							
 						} catch (ArrayIndexOutOfBoundsException e) {
-							System.out.println("Could not read boardSize...");
+							System.out.println("Client: Could not read boardSize");
 							
 						}
 						
 					} catch (ArrayIndexOutOfBoundsException e) {
 						
-						System.out.println("Could not read startColour...");
+						// 2 is ignored here.
+						System.out.println("Client: Could not read startColour..."
+								+ "... sending settings");
+						clientTextInputQueue.add(new ClientTextInputPacket(
+								"SETTINGS$BLACK$19"));
+						// Now expecting a server packet that looks like this:
+						// START 2 BLACK 19 jan piet
 					}
 					
 	
@@ -502,9 +521,9 @@ public class Client {
 								
 	
 								
-								String takeNext = inputLineSplit[1];
+								String takeNext = inputLineSplit[3];
 								String move = inputLineSplit[2];
-								String byPlayer = inputLineSplit[3];
+								String byPlayer = inputLineSplit[1];
 								
 								String[] moveSplit = move.split("\\" + delimiter2);
 								

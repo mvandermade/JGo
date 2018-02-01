@@ -66,6 +66,31 @@ public class ConnectionManager {
 		clients.add(new ConnectedClientObj(clientId, skt));
 		
 		addToClientTxQueue(new ToClientPacket(clientId,
+				"NAME",
+				"HelloMyFriends"
+				+ server.Server.getDELIMITER1()
+				+ "VERSION"
+				+ server.Server.getDELIMITER1()
+				+ "6"
+				+ server.Server.getDELIMITER1()
+				+ "EXTENSIONS"
+				+ server.Server.getDELIMITER1()
+				+ "1"
+				+ server.Server.getDELIMITER1()
+				+ "0"
+				+ server.Server.getDELIMITER1()
+				+ "0"
+				+ server.Server.getDELIMITER1()
+				+ "0"
+				+ server.Server.getDELIMITER1()
+				+ "0"
+				+ server.Server.getDELIMITER1()
+				+ "0"
+				+ server.Server.getDELIMITER1()
+				+ "0"
+						));
+		
+		addToClientTxQueue(new ToClientPacket(clientId,
 				"OTHER",
 				"Hi, Whats your name? use: NAME$YOURNAME to continue."));
 		addToClientTxQueue(new ToClientPacket(clientId,
