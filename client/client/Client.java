@@ -394,9 +394,12 @@ public class Client {
 		
 		if (printServerDebug) {
 			
-			System.out.println(">Server> " + inputLineCMD);
+			//System.out.println(">Server> " + inputLineCMD);
 			printServerDebug = false;
 		}
+		
+		
+		System.out.println(">Server> " + inputLineCMD);
 		
 		try {
 			String[] inputLineSplit = inputLineCMD.split("\\" + delimiter1);
