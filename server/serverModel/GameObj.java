@@ -303,7 +303,7 @@ public class GameObj {
 			if (board.isMoveValid(getPlayerNumber(clientId), row, col)) {
 				
 				try {
-					board.putStoneForPlayer(getPlayerNumber(clientId), row, col);
+					board.putStoneForPlayer(getPlayerNumber(clientId), row, col, true, false);
 					System.out.println("P1 Score:" + board.getScoreP1());
 					System.out.println("P2 Score:" + board.getScoreP2());
 					

@@ -67,6 +67,8 @@ public class Client {
 	private int playerNoOtherScore = 0;
 
 	private String startColourPlayer;
+
+	private int aimovesmade=0;
 	
     /**
      * The client application is designed to connect to a server that
@@ -630,7 +632,8 @@ public class Client {
 		if (board.isMoveValid(moveForPlayerNo, row, col)) {
 			
 			try {
-				List<Stone> toRemoveStonesGui = board.putStoneForPlayer(moveForPlayerNo, row, col);
+				List<Stone> toRemoveStonesGui = board.putStoneForPlayer(moveForPlayerNo, row, col,
+						true, false);
 				// false = 1, true = 2
 				if (moveForPlayerNo == 1) {
 					gogui.addStoneRC(row, col, false);
@@ -649,7 +652,7 @@ public class Client {
 			
 			// The server announces that the other player has moved
 			if (playerNoOther == moveForPlayerNo) {
-				buddyAI();
+				buddyAI(moveForPlayerNo);
 			}
 			
 		}
@@ -660,28 +663,141 @@ public class Client {
 	 * An AI which places a marker on the board and prints out text for you to copy.
 	 * You can trigger it to post for you if you flip the settings switch
 	 */
-	public void buddyAI() {
+	public void buddyAI(int moveForPlayerNo) {
+		
+		aimovesmade++;
 		
 		gogui.removeHintIdicator();
 		
-		int aiX = ThreadLocalRandom.current().nextInt(0, board.getBoardSize());
-		int aiY = ThreadLocalRandom.current().nextInt(0, board.getBoardSize());
+		// try randomly
 		
-		int aiCol = aiX + 1;
-		int aiRow = aiY + 1;
+		int aiRow = 0;
+		int aiCol = 0;
+		Boolean goodRandomGuess = false;
+		
+		while (!goodRandomGuess) {
+			aiRow = ThreadLocalRandom.current()
+					.nextInt(0, board.getBoardSize());
+			aiCol = ThreadLocalRandom.current()
+					.nextInt(0, board.getBoardSize());
+			
+			if (board.isMoveValid(moveForPlayerNo, aiRow, aiCol)) {
+				try {
+					// Non persistent move
+					// See if exception is thrown, if not the move is stored in aiRow and aiCol
+					board.putStoneForPlayer(moveForPlayerNo,
+							aiRow, aiCol, false, false);
+					// Breaking the loop
+					goodRandomGuess = true;
+	
+				} catch (BoardKoRuleViolatedE e) {
+					// do nothing, ignore
+				}
+			}
+		}
+		
+		int[][] boardCapture = new int[board.getBoardSize()][board.getBoardSize()];
+		int[][] boardGain = new int[board.getBoardSize()][board.getBoardSize()];
+		
+		for (int r = 0; r < board.getBoardSize(); r++)	{
+			for (int c = 0; c < board.getBoardSize(); c++)	{
+				boardCapture[r][c] = 0;
+				boardGain[r][c] = 0;
+			}
+		}
+		
+		// Needs to be maximized.
+		// All board positions:
+		// Evaluate the amount of gained stones
+		// Evaluate the total length of own chains
+		
+		// Do some funny dance
+		int randomdivider = ThreadLocalRandom.current()
+				.nextInt(1, 11);
+				
+				
+		if (aimovesmade % randomdivider == 0) {
+		
+			for (int r = 0; r < board.getBoardSize(); r++)	{
+				for (int c = 0; c < board.getBoardSize(); c++)	{
+					if (board.isMoveValid(moveForPlayerNo, aiRow, aiCol)) {
+						try {
+							// Non persistent move
+							// Get removed stones
+							// See if exception is thrown, if not the move
+							// is stored in aiRow and aiCol
+							List<Stone> tryCapture = board.putStoneForPlayer(moveForPlayerNo,
+									r, c, false, false);
+							boardCapture[r][c] = tryCapture.size();
+							
+							// trigger return of stones in chain
+							List<Stone> tryGain = board.putStoneForPlayer(moveForPlayerNo,
+									r, c, false, true);
+							boardGain[r][c] = tryGain.size();
+							
+			
+						} catch (BoardKoRuleViolatedE e) {
+							// do nothing, ignore
+						}
+					}
+					
+				}
+			}
+			
+			int toMaximize = 0;
+			
+			for (int r = 0; r < board.getBoardSize(); r++)	{
+				for (int c = 0; c < board.getBoardSize(); c++)	{
+					
+					if (board.isMoveValid(moveForPlayerNo, r, c)) {
+						try {
+							// Non persistent move
+							// See if exception is thrown, if not the move
+							//is stored in aiRow and aiCol
+							board.putStoneForPlayer(moveForPlayerNo,
+									r, c, false, false);
+							// Breaking the loop
+							
+							if (boardCapture[r][c] + boardGain[r][c] > toMaximize) {
+								aiRow = r;
+								aiCol = c;
+								
+							}
+			
+						} catch (BoardKoRuleViolatedE e) {
+							// do nothing, ignore
+						}
+					}
+					
+	
+				}
+			}
+		}
+		
+		
+		
+		
+		// Got something, can improve by logic ?
+		
+//		if (thisTryRemovedMax < toRemoveStonesGui.size()) {
+//			
+//			thisTryRemovedMax = toRemoveStonesGui.size();
+//		}
+		
 		// Right now totally random advice.
 		// In future use functionality of Board to decide based on chain length/shape etc.
 		// Create some sort of 'fitness function'.
 		System.out.println("<buddyAI> HINT:");
-		String buddyAIout = "MOVE$" + aiCol + "_" + aiRow;
+		String buddyAIout = "MOVE$" + aiRow + "_" + aiCol;
 		System.out.println(buddyAIout);
-		if (playerName.equals("AIAI") || playerName.equals("AIAI2")) {
+		if (playerName.equals("AIAI") || playerName.equals("AIAI2") || 
+				playerName.equals("C-3PO")) {
 			clientTextInputQueue.add(new ClientTextInputPacket(
 					buddyAIout));
 			System.out.println("buddy moves for you!");
 		}
 		
-		gogui.addHintIndicator(aiX, aiY);
+		gogui.addHintIndicator(aiCol, aiRow);
 		
 	}
     /**

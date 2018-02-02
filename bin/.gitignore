@@ -1,13 +1,4 @@
-/background_1920.jpg
-/board/
 /client/
-/clientController/
-/clientModel/
-/clientView/
-/emty.txt
-/gui/
-/server/
-/serverController/
-/main/
+/board/
 /serverModel/
-/serverView/
+/main/

@@ -218,7 +218,8 @@ public class Board {
      * @throws	BoardKoRuleViolatedE	Exception ko rule
      * @return	List<Stone>	List of stones removed after adding.
      */
-	public List<Stone> putStoneForPlayer(int playerNo, int row, int col)
+	public List<Stone> putStoneForPlayer(int playerNo, int row, int col,
+			Boolean persistent, Boolean getAvgChainLength)
 			throws BoardKoRuleViolatedE {
 		
 		int[][] matBegin = new int[boardSize][boardSize];
@@ -261,7 +262,7 @@ public class Board {
 		
 		chains.add(newChain);
 		newChain.getStones().forEach((stone) -> {
-			System.out.print(stone.row); System.out.print(stone.col);
+			//System.out.print(stone.row); System.out.print(stone.col);
 		});
 
 		
@@ -323,6 +324,23 @@ public class Board {
 			
 			throw new BoardKoRuleViolatedE("Ko Rule violation!");
 			
+		} else if (!persistent) {
+			// For AI and such trying a move, non persistence mode !
+			// Removal procedure equals above.
+			toRemoveStones.clear();
+			toRemoveStones.add(new Stone(playerNo, row, col));
+			
+			for (int r = 0; r < boardSize; r++)	{
+				for (int c = 0; c < boardSize; c++)	{
+					boardMat[r][c] = matBegin[r][c];
+				}
+			}
+			
+			this.chains = new ArrayList<Chain>(chainsBegin);
+			
+			
+			
+			// Persistent !
 		} else {
 			
 			// Ko rule is OK.
@@ -341,8 +359,11 @@ public class Board {
 			calculateScore(playerNo, capturedStones);
 			
 		}
-		
-		return toRemoveStones;
+		if (getAvgChainLength) {
+			return newChain.getStones();
+		} else {
+			return toRemoveStones;
+		}
 		
 	}
 	

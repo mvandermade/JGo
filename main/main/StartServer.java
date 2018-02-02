@@ -3,6 +3,8 @@ package main;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class StartServer {
 
@@ -19,6 +21,24 @@ public class StartServer {
      *
      */
 	public static void main(String[] args) {
+		
+		try	{
+		    InetAddress addr;
+		    addr = InetAddress.getLocalHost();
+		    String hostname = addr.getHostName();
+		    System.out.println("Pass hostname to the clients:");
+		    System.out.println("hostname:");
+		    System.out.println(hostname);
+		    System.out.println("or (if host not known) IP:");
+		    System.out.println(addr);
+		    
+		    
+		    
+		} catch (UnknownHostException ex) {
+		    System.out.println("Your hostname was not determined,"
+		    		+ " try your ip adress. Start -> search: cmd -> ipconfig");
+		}
+		
 		while (true) {
 			try {
 				System.out.println("Please enter a port to listen on (none-> 5647)");
