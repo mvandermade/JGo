@@ -5,8 +5,49 @@ Java application that allows to host dedicated servers and attach human players 
 Java Runtime is already installed
 http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html
 
-# Installation instructions
-At the time of writing no build is yet shipped with the project.
+OR (Preffered if you don't want to install java)
+Download Java Portable
+https://portableapps.com/apps/utilities/java_portable
+Follow the instructions to extract the program (you can put it on USB, no need to install).
+
+# User instructions
+If you have Java installed AND added to the windows PATH you can run the .bat files in any directory.
+
+Otherwise via javaPortable (unpacked in <install_location of javaPortable> ):
+
+Look for the folder <install_location of javaPortable> /bin/.
+Check that you can see the java.exe in this /bin/ folder.
+
+Download the .zip of 'final' via the GitHub Page https://github.com/mvandermade/JGo using a webbrowser
+Click clone or download > Download ZIP. 
+Then from JGo.zip extract the folder 'runnable' in /bin/.
+You now have the folder /bin/:
+.
+..
+<other files>
+java.exe         < 'Java runtime' application 
+StartServer.jar  < Java application
+StartClient.jar  < Java application
+StartClient.bat  < Windows executable script
+StartServer.bat  < Windows executable script
+<other files>
+  
+The .bat files contain the command line instructions to pass either StartClient.jar or StartServer.jar to java.exe.
+It is therefore important that the .bat and .jar are in the same folder as java.exe.
+
+*(You can either create a shortcut to- or modify the .bat file to your own folder structuring.)*
+
+Run the StartServer.bat
+- Keep pressing enter if you want the default settings
+Run the StartClient.bat
+- Enter your player name
+*(to enable AI to type moves for you name your player: AIAI or AIAI2).*
+The yellow ball is a 'hint' provided by the AI, and is always enabled at this time.
+
+Run multiple instances of StartClient.bat on any PC in your local network.
+
+# Developer instructions
+
 The manner of running is via Eclipse, which you can download for free.
 https://www.eclipse.org/downloads/packages/eclipse-ide-java-developers/oxygenr
 
