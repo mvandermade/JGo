@@ -43,19 +43,24 @@ You now have the folder /bin/:
 
 <other files>
 
-java.exe        
+java.exe
+
 *^ 'Java .jar runtime' application
 
 StartServer.jar
+
 *^ Java .jar application
 
-StartClient.jar 
+StartClient.jar
+
 *^ Java .jar application
 
-StartClient.bat 
+StartClient.bat
+
 *^ Windows executable script
 
-StartServer.bat 
+StartServer.bat
+
 *^ Windows executable script
 
 <other files>
