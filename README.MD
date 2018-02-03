@@ -36,6 +36,7 @@ Then from JGo.zip extract the folder 'runnable' in /bin/.
 You now have the folder /bin/:
 
 -----------------/Java/bin/--------------
+
 .
 
 ..
