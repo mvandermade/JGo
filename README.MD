@@ -35,7 +35,7 @@ Then from JGo.zip extract the folder 'runnable' in /bin/.
 
 You now have the folder /bin/:
 
-
+-----------------/Java/bin/--------------
 .
 
 ..
@@ -53,6 +53,8 @@ StartClient.bat  < Windows executable script
 StartServer.bat  < Windows executable script
 
 <other files>
+  
+-----------------------------------------
   
 The .bat files contain the command line instructions to pass either StartClient.jar or StartServer.jar to java.exe.
 
