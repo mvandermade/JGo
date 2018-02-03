@@ -45,23 +45,23 @@ You now have the folder /bin/:
 
 java.exe
 
-*^ 'Java .jar runtime' application
+*^ 'Java .jar runtime' application*
 
 StartServer.jar
 
-*^ Java .jar application
+*^ Java .jar application*
 
 StartClient.jar
 
-*^ Java .jar application
+*^ Java .jar application*
 
 StartClient.bat
 
-*^ Windows executable script
+*^ Windows executable script*
 
 StartServer.bat
 
-*^ Windows executable script
+*^ Windows executable script*
 
 <other files>
   
