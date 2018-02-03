@@ -126,27 +126,20 @@ Click the green play button.
 
 Interact with the console window that shows up.
 
-
 Note: you can run multiple files at a time.
 
 Hint: the console window can be pinned and switched between using the blue-lined screen icon.
-
-Also: the program is terminated by clicking the red stop button.
-
-
+This icon is located in the tabbed view with 'console etc. on the top-right of the gray menubar.'
+Also in this position is a red stop button. 
+This 'kills' the currently switched-to console window.
+Splitting this windows is also possible via the view window.
 
 Option B Via git
-
+Command line:
 git clone https://github.com/mvandermade/JGo.git
-
-
---use any program you like
-
+Load project in eclipse
 
 Option C Via .zip
-
 Download the .zip of 'final' via the GitHub Page https://github.com/mvandermade/JGo using a webbrowser
-
 Click clone or download > Download ZIP. Then extract the file.
-
---use any program you like
+Load project in eclipse
