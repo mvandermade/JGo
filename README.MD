@@ -43,15 +43,20 @@ You now have the folder /bin/:
 
 <other files>
   
-java.exe         < 'Java runtime' application 
+java.exe        
+^ 'Java .jar runtime' application
 
-StartServer.jar  < Java application
+StartServer.jar 
+^ Java .jar application
 
-StartClient.jar  < Java application
+StartClient.jar 
+^ Java .jar application
 
-StartClient.bat  < Windows executable script
+StartClient.bat 
+^ Windows executable script
 
-StartServer.bat  < Windows executable script
+StartServer.bat 
+^ Windows executable script
 
 <other files>
   
